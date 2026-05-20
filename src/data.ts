@@ -162,14 +162,16 @@ export interface AppSpecs {
   activeGamers: string;
   totalPricePaid: string;
   tournamentsDone: string;
+  downloadUrl: string;
 }
 
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
-  apkVersion: "v1.0.1 (Latest)",
-  fileSize: "76 MB",
+  apkVersion: "v1.0.1",
+  fileSize: "77 MB",
   androidOs: "6.0+",
   activeGamers: "10+",
   totalPricePaid: "৳1000+",
-  tournamentsDone: "10K+"
+  tournamentsDone: "10+",
+  downloadUrl: "https://www.dropbox.com/scl/fi/xfvcn880w9fux1py7qu42/fire_clash_bd.apk?rlkey=zw7jdppzyreh9fmk7svpfplpw&st=g9i8u795&dl=1"
 };

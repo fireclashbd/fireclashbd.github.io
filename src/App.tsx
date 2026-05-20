@@ -167,6 +167,23 @@ export default function App() {
     return () => clearInterval(intervalId);
   }, [isDownloading, downloadProgress]);
 
+  // Handle actual download of the editable APK URL when simulation completes
+  useEffect(() => {
+    if (downloadFinished) {
+      try {
+        const link = document.createElement("a");
+        link.href = AppMetaData.downloadUrl;
+        link.setAttribute("download", "FireClashBD.apk");
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error("Failed to trigger automatic download:", err);
+      }
+    }
+  }, [downloadFinished]);
+
   // Handle virtual wallet refilling
   const handleSimulatedDeposit = (e: FormEvent) => {
     e.preventDefault();
@@ -681,12 +698,22 @@ export default function App() {
                                 <li>Tap Install, open the icon, and register in 2 minutes!</li>
                               </ol>
 
-                              <button 
-                                onClick={() => setIsDownloading(false)}
-                                className="w-full mt-2 py-2 border border-[#ff4e00]/25 hover:border-[#ff4e00]/45 bg-[#ff4e00]/5 hover:bg-[#ff4e00]/10 text-orange-400 font-display text-xs font-bold uppercase tracking-wider rounded-lg transition-all text-center cursor-pointer"
-                              >
-                                Reset Simulator
-                              </button>
+                              <div className="pt-2 flex flex-col gap-2">
+                                <a 
+                                  href={AppMetaData.downloadUrl}
+                                  download="FireClashBD.apk"
+                                  className="w-full py-2.5 bg-[#ff4e00] hover:bg-[#ff621e] text-white font-display text-xs font-bold uppercase tracking-stretch rounded-lg text-center transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-[#ff4e00]/10"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span>Download APK Directly</span>
+                                </a>
+                                <button 
+                                  onClick={() => setIsDownloading(false)}
+                                  className="w-full py-2 border border-white/5 hover:border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-gray-400 hover:text-white font-display text-xs font-bold uppercase tracking-wider rounded-lg transition-all text-center cursor-pointer"
+                                >
+                                  Restart Simulator
+                                </button>
+                              </div>
                             </motion.div>
                           ) : (
                             <motion.div 
