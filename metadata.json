@@ -1,0 +1,8 @@
+{
+  "name": "Fire Clash BD",
+  "description": "Bangladesh's Ultimate Free Fire Tournament Platform. Play competitive esports tournaments, compete with top players, and win real rewards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
