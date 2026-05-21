@@ -435,7 +435,7 @@ export default function App() {
                   </div>
 
                   {/* Main Header */}
-                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight leading-tight uppercase lg:max-w-2xl">
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight leading-tight uppercase max-w-3xl mx-auto">
                     Bangladesh’s Ultimate{" "}
                     <span className="bg-gradient-to-r from-[#ff4e00] via-[#ff6525] to-[#ec1c24] bg-clip-text text-transparent block md:inline animate-glow">
                       Free Fire
@@ -444,12 +444,12 @@ export default function App() {
                   </h1>
 
                   {/* Description Paragraph */}
-                  <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-sans">
+                  <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed font-sans">
                     Join professional matches, defeat top-tier rooms, secure instant rewards, and transfer your winnings directly into cash. Your raw combat skill is the only key to gaming fortune.
                   </p>
 
                   {/* Statistics block showing scale of operations */}
-                  <div className="grid grid-cols-3 gap-3 max-w-md mx-auto lg:mx-0 border-t border-b border-white/5 py-4 font-display">
+                  <div className="grid grid-cols-3 gap-3 max-w-md mx-auto border-t border-b border-white/5 py-4 font-display">
                     <div>
                       <h4 className="text-xl md:text-2xl font-black text-[#ff4e00]">{AppMetaData.activeGamers}</h4>
                       <p className="text-[10px] uppercase text-gray-500 tracking-wider">Active Gamers</p>
@@ -693,26 +693,20 @@ export default function App() {
                               
                               <ol className="text-[11px] text-gray-400 space-y-2 font-sans list-decimal list-inside pl-1">
                                 <li>Open your device's <strong>File Manager</strong> or Downloads directory.</li>
-                                <li>Tap on <code>FireClashBD_v3.2.apk</code>.</li>
+                                <li>Tap on <code>fire_clash_bd.apk</code>.</li>
                                 <li>If prompted, verify that <strong>“Install from Unknown Sources”</strong> is enabled in your browser settings.</li>
                                 <li>Tap Install, open the icon, and register in 2 minutes!</li>
                               </ol>
 
-                              <div className="pt-2 flex flex-col gap-2">
+                              <div className="pt-2">
                                 <a 
                                   href={AppMetaData.downloadUrl}
                                   download="FireClashBD.apk"
-                                  className="w-full py-2.5 bg-[#ff4e00] hover:bg-[#ff621e] text-white font-display text-xs font-bold uppercase tracking-stretch rounded-lg text-center transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-[#ff4e00]/10"
+                                  className="w-full py-3 bg-[#ff4e00] hover:bg-[#ff621e] text-white font-display text-xs font-bold uppercase tracking-widest rounded-lg text-center transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-[#ff4e00]/10"
                                 >
                                   <Download className="w-3.5 h-3.5" />
                                   <span>Download APK Directly</span>
                                 </a>
-                                <button 
-                                  onClick={() => setIsDownloading(false)}
-                                  className="w-full py-2 border border-white/5 hover:border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-gray-400 hover:text-white font-display text-xs font-bold uppercase tracking-wider rounded-lg transition-all text-center cursor-pointer"
-                                >
-                                  Restart Simulator
-                                </button>
                               </div>
                             </motion.div>
                           ) : (
@@ -824,7 +818,7 @@ export default function App() {
               </div>
 
               {/* Social Channels Flex/Grid layout with custom identities */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto gap-6 text-left">
                 {SocialMediaList.map((social) => {
                   let SocialIcon = ({ className }: { className?: string }) => <div className={className} />;
                   if (social.platform === "Facebook") SocialIcon = ({ className }) => <Facebook className={className} />;
