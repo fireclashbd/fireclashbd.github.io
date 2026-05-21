@@ -18,3 +18,4 @@ View your app in AI Studio: https://ai.studio/apps/06143ef3-4e4b-45c4-b39e-95708
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+"# fireclashbd.github.io" 
