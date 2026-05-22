@@ -130,9 +130,7 @@ export const SocialMediaList = [
     name: "YouTube Channel",
     platform: "YouTube",
     url: "https://www.youtube.com/@fire_clash_bd",
-    // Softened from raw red to a deep slate-to-burgundy tint that brightens smoothly on hover
     color: "from-[#000000]/40 to-[#991b1b]/20 hover:from-[#000000] hover:to-[#991b1b]/40",
-    // Muted the neon glow to a subtle, dark red crimson shadow
     glowColor: "shadow-[#991b1b]/10 hover:shadow-[#991b1b]/40",
     label: "@fire_clash_bd",
     sub: "Watch match highlights, top plays, and daily streams"
@@ -175,5 +173,5 @@ export const AppMetaData: AppSpecs = {
   activeGamers: "20+",
   totalPricePaid: "৳1000+",
   tournamentsDone: "10+",
-  downloadUrl: "https://www.dropbox.com/scl/fi/xfvcn880w9fux1py7qu42/fire_clash_bd.apk?rlkey=zw7jdppzyreh9fmk7svpfplpw&st=i5ruezya&dl=1"
+  downloadUrl: "https://github.com/fireclashbd/fireclashbd.github.io/releases/download/v1.0.2/fire_clash_bd.apk"
 };
