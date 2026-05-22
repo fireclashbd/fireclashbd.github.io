@@ -37,7 +37,7 @@ export const FeaturesList = [
     id: "payout",
     iconName: "Zap",
     title: "Fastest Payout",
-    description: "Submit a withdrawal request and receive your hard-earned winnings into bKash, Nagad, or Rocket within 5 to 30 minutes, guaranteed!"
+    description: "Submit a withdrawal request and receive your hard-earned winnings into Nagad within 30 minutes, guaranteed!"
   },
   {
     id: "deposit",
@@ -170,7 +170,7 @@ export const AppMetaData: AppSpecs = {
   apkVersion: "v1.0.1",
   fileSize: "77 MB",
   androidOs: "6.0+",
-  activeGamers: "10+",
+  activeGamers: "20+",
   totalPricePaid: "৳1000+",
   tournamentsDone: "10+",
   downloadUrl: "https://www.dropbox.com/scl/fi/xfvcn880w9fux1py7qu42/fire_clash_bd.apk?rlkey=zw7jdppzyreh9fmk7svpfplpw&st=g9i8u795&dl=1"
