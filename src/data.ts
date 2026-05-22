@@ -1,11 +1,11 @@
-import { 
-  ShieldCheck, 
-  Lock, 
-  Zap, 
-  Coins, 
-  Award, 
-  Scale, 
-  Headphones, 
+import {
+  ShieldCheck,
+  Lock,
+  Zap,
+  Coins,
+  Award,
+  Scale,
+  Headphones,
   PlayCircle,
   Facebook,
   Youtube,
@@ -37,7 +37,7 @@ export const FeaturesList = [
     id: "payout",
     iconName: "Zap",
     title: "Fastest Payout",
-    description: "Submit a withdrawal request and receive your hard-earned winnings into Nagad within 30 minutes, guaranteed!"
+    description: "Submit a withdrawal request and receive your hard-earned winnings into Nagad within 30 minutes, guaranteed! No Questions Ask!"
   },
   {
     id: "deposit",
@@ -45,30 +45,30 @@ export const FeaturesList = [
     title: "Auto Deposit System",
     description: "No manual admin checking delays. Instantly load money into your in-app wallet anytime with automatic instant BDT gateway."
   },
-  {
-    id: "rewards",
-    iconName: "Award",
-    title: "Real Prize Money",
-    description: "Compete with Bangladeshi esports stars and transform your gaming skills into actual cash prizes, paid out on standard mobile bank methods."
-  },
-  {
-    id: "fairplay",
-    iconName: "Scale",
-    title: "Fair Play System",
-    description: "Advanced match room observation, anti-colleague system, and hardware tracking guarantees a level playing field for standard gamers."
-  },
-  {
-    id: "support",
-    iconName: "Headphones",
-    title: "24/7 Dedicated Support",
-    description: "Have any questions or match disputes? Reach out to our specialized support staff instantly via active in-app chat or Messenger support."
-  },
-  {
-    id: "instant",
-    iconName: "PlayCircle",
-    title: "Instant Match Joining",
-    description: "Receive match room IDs and passwords automatically in the app precisely 10 minutes prior to match schedule. Click & join."
-  }
+  // {
+  //   id: "rewards",
+  //   iconName: "Award",
+  //   title: "Real Prize Money",
+  //   description: "Compete with Bangladeshi esports stars and transform your gaming skills into actual cash prizes, paid out on standard mobile bank methods."
+  // },
+  // {
+  //   id: "fairplay",
+  //   iconName: "Scale",
+  //   title: "Fair Play System",
+  //   description: "Advanced match room observation, anti-colleague system, and hardware tracking guarantees a level playing field for standard gamers."
+  // },
+  // {
+  //   id: "support",
+  //   iconName: "Headphones",
+  //   title: "24/7 Dedicated Support",
+  //   description: "Have any questions or match disputes? Reach out to our specialized support staff instantly via active in-app chat or Messenger support."
+  // },
+  // {
+  //   id: "instant",
+  //   iconName: "PlayCircle",
+  //   title: "Instant Match Joining",
+  //   description: "Receive match room IDs and passwords automatically in the app precisely 10 minutes prior to match schedule. Click & join."
+  // }
 ];
 
 export interface PolicyItem {
@@ -127,31 +127,33 @@ export const PolicyList: PolicyItem[] = [
 
 export const SocialMediaList = [
   {
-    name: "Facebook Page",
-    platform: "Facebook",
-    url: "https://facebook.com",
-    color: "from-[#1877F2]/20 to-[#1877F2]/40 hover:from-[#1877F2] hover:to-[#1877F2]/80",
-    glowColor: "shadow-[#1877F2]/20 hover:shadow-[#1877F2]/50",
-    label: "@FireClashBD",
-    sub: "Get community tournament announcements & live results"
-  },
-  {
     name: "YouTube Channel",
     platform: "YouTube",
-    url: "https://youtube.com",
-    color: "from-[#FF0000]/20 to-[#FF0000]/40 hover:from-[#FF0000] hover:to-[#FF0000]/80",
-    glowColor: "shadow-[#FF0000]/20 hover:shadow-[#FF0000]/50",
-    label: "Fire Clash BD YT",
+    url: "https://www.youtube.com/@fire_clash_bd",
+    // Softened from raw red to a deep slate-to-burgundy tint that brightens smoothly on hover
+    color: "from-[#000000]/40 to-[#991b1b]/20 hover:from-[#000000] hover:to-[#991b1b]/40",
+    // Muted the neon glow to a subtle, dark red crimson shadow
+    glowColor: "shadow-[#991b1b]/10 hover:shadow-[#991b1b]/40",
+    label: "@fire_clash_bd",
     sub: "Watch match highlights, top plays, and daily streams"
   },
   {
     name: "TikTok Account",
     platform: "TikTok",
-    url: "https://tiktok.com",
+    url: "https://www.tiktok.com/@fire_clash_bd",
     color: "from-[#000000]/40 to-[#00f2fe]/20 hover:from-[#000000] hover:to-[#00f2fe]/40",
     glowColor: "shadow-[#00f2fe]/20 hover:shadow-[#00f2fe]/50",
-    label: "@fireclash.bd",
+    label: "@fire_clash_bd",
     sub: "Trendy shorts, competitive updates, and funny clips"
+  },
+  {
+    name: "Discord Channel",
+    platform: "Discord",
+    url: "https://discord.gg/VbUvRgE8",
+    color: "from-[#000000]/40 to-[#229ED9]/20 hover:from-[#000000] hover:to-[#229ED9]/40",
+    glowColor: "shadow-[#229ED9]/20 hover:shadow-[#229ED9]/50",
+    label: "fire_clash_bd",
+    sub: "Join the community for instant announcements, news, and discussion"
   }
 ];
 
@@ -167,11 +169,11 @@ export interface AppSpecs {
 
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
-  apkVersion: "v1.0.1",
-  fileSize: "77 MB",
-  androidOs: "6.0+",
+  apkVersion: "v1.0.2",
+  fileSize: "77.6 MB",
+  androidOs: "5.0+",
   activeGamers: "20+",
   totalPricePaid: "৳1000+",
   tournamentsDone: "10+",
-  downloadUrl: "https://www.dropbox.com/scl/fi/xfvcn880w9fux1py7qu42/fire_clash_bd.apk?rlkey=zw7jdppzyreh9fmk7svpfplpw&st=g9i8u795&dl=1"
+  downloadUrl: "https://www.dropbox.com/scl/fi/xfvcn880w9fux1py7qu42/fire_clash_bd.apk?rlkey=zw7jdppzyreh9fmk7svpfplpw&st=i5ruezya&dl=1"
 };
