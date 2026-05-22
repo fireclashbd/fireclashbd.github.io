@@ -35,7 +35,7 @@ import {
   ListFilter
 } from "lucide-react";
 
-import appIcon from "../icon.png";
+import appIcon from "./icon.png";
 
 import { 
   FeaturesList, 
