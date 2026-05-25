@@ -138,7 +138,7 @@ export const SocialMediaList = [
   {
     name: "TikTok Account",
     platform: "TikTok",
-    url: "https://www.tiktok.com/@fire_clash_bd",
+    url: "https://www.tiktok.com/@fireclashbd",
     color: "from-[#000000]/40 to-[#00f2fe]/20 hover:from-[#000000] hover:to-[#00f2fe]/40",
     glowColor: "shadow-[#00f2fe]/20 hover:shadow-[#00f2fe]/50",
     label: "@fire_clash_bd",

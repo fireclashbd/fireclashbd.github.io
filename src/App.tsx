@@ -476,7 +476,7 @@ export default function App() {
                   {/* Discord / Facebook communities buttons */}
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-center">
                     <a
-                      href="https://www.tiktok.com/@fire_clash_bd"
+                      href="https://www.tiktok.com/@fireclashbd"
                       target="_blank"
                       rel="noreferrer"
                       className="w-12 h-12 flex items-center justify-center border border-white/10 hover:border-orange-500/35 bg-white/5 hover:bg-orange-500/5 rounded-xl transition-all font-semibold"
