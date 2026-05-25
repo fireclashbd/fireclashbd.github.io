@@ -167,11 +167,11 @@ export interface AppSpecs {
 
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
-  apkVersion: "v1.0.2",
-  fileSize: "77.6 MB",
-  androidOs: "5.0+",
+  apkVersion: "v1.0.3",
+  fileSize: "77.2 MB",
+  androidOs: "8.0+",
   activeGamers: "20+",
   totalPricePaid: "৳1000+",
   tournamentsDone: "10+",
-  downloadUrl: "https://github.com/fireclashbd/fireclashbd.github.io/releases/download/v1.0.2/fire_clash_bd.apk"
+  downloadUrl: "https://github.com/fireclashbd/fireclashbd.github.io/releases/download/v1.0.3/fire_clash_bd_v1.0.3.apk"
 };
