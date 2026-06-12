@@ -168,7 +168,7 @@ export interface AppSpecs {
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
   apkVersion: "v1.1.0",
-  fileSize: "69 MB",
+  fileSize: "73.04 MB",
   androidOs: "8.0+",
   activeGamers: "30+",
   totalPricePaid: "৳2500+",
