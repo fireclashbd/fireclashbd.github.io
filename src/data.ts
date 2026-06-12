@@ -111,7 +111,7 @@ export const PolicyList: PolicyItem[] = [
   {
     id: "age-limit",
     title: "7. Age Requirement",
-    content: "Users should be at least 13 years old to use the platform. Users under local legal age should use the app with guardian permission."
+    content: "Users should be at least 18 years old to use the platform. Users under local legal age should use the app with guardian permission."
   },
   {
     id: "changes",
