@@ -86,7 +86,7 @@ export const PolicyList: PolicyItem[] = [
   {
     id: "user-info",
     title: "2. User Information",
-    content: "When creating an account, we may collect the following information:\n• Name\n• Email Address\n• Phone Number\n• Game UID\n• Payment Information\n\nThis information is used for account verification, tournament participation, prize payout processing, security monitoring, and customer support. We do not sell user data to third parties."
+    content: "When creating an account, we may collect the following information:\n• Name\n• Email Address\n• Phone Number\n• Game IGN\n• Payment Information\n\nThis information is used for account verification, tournament participation, prize payout processing, security monitoring, and customer support. We do not sell user data to third parties. But we will show user Email and IGN in-app features like Participant Lists and Tournament Results Lists."
   },
   {
     id: "ac-security",
@@ -167,11 +167,11 @@ export interface AppSpecs {
 
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
-  apkVersion: "v1.0.4",
-  fileSize: "77.2 MB",
+  apkVersion: "v1.1.0",
+  fileSize: "69 MB",
   androidOs: "8.0+",
-  activeGamers: "20+",
-  totalPricePaid: "৳1000+",
-  tournamentsDone: "10+",
+  activeGamers: "30+",
+  totalPricePaid: "৳2500+",
+  tournamentsDone: "60+",
   downloadUrl: "https://github.com/fireclashbd/fireclashbd.github.io/releases/latest/download/fire_clash_bd.apk"
 };
