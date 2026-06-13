@@ -138,7 +138,7 @@ export const SocialMediaList = [
   {
     name: "TikTok Account",
     platform: "TikTok",
-    url: "https://www.tiktok.com/@fireclashbd",
+    url: "https://www.tiktok.com/@fire_clash_bd",
     color: "from-[#000000]/40 to-[#00f2fe]/20 hover:from-[#000000] hover:to-[#00f2fe]/40",
     glowColor: "shadow-[#00f2fe]/20 hover:shadow-[#00f2fe]/50",
     label: "@fire_clash_bd",
@@ -147,10 +147,10 @@ export const SocialMediaList = [
   {
     name: "Discord Channel",
     platform: "Discord",
-    url: "https://discord.gg/VbUvRgE8",
+    url: "https://discord.gg/MppEcHdyeX",
     color: "from-[#000000]/40 to-[#229ED9]/20 hover:from-[#000000] hover:to-[#229ED9]/40",
     glowColor: "shadow-[#229ED9]/20 hover:shadow-[#229ED9]/50",
-    label: "fire_clash_bd",
+    label: "@fire_clash_bd",
     sub: "Join the community for instant announcements, news, and discussion"
   }
 ];
@@ -168,7 +168,7 @@ export interface AppSpecs {
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
   apkVersion: "v1.1.0",
-  fileSize: "73.04 MB",
+  fileSize: "73.02 MB",
   androidOs: "8.0+",
   activeGamers: "30+",
   totalPricePaid: "৳2500+",
