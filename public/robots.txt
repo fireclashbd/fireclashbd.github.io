@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fireclashbd.github.io/sitemap.xml
