@@ -874,7 +874,7 @@ export default function App() {
               </div>
 
               {/* Social Channels Flex/Grid layout with custom identities */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto gap-6 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto gap-6 text-left">
                 {SocialMediaList.map((social) => {
                   let SocialIcon = ({ className }: { className?: string }) => <div className={className} />;
                   if (social.platform === "Facebook") SocialIcon = ({ className }) => <Facebook className={className} />;
