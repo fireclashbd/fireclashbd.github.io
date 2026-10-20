@@ -81,21 +81,22 @@ html {
   text-shadow: 0 0 12px rgba(34, 211, 238, 0.45);
 }
 
-/* Custom animation keyframes */
-@keyframes pulseGlow {
+/* Custom animation keyframes (desktop-only to save mobile GPU) */
+@media (min-width: 768px) {
+  @keyframes pulseGlow {
+    0%,
+    100% {
+      text-shadow: 0 0 10px rgba(255, 87, 34, 0.4), 0 0 20px rgba(255, 87, 34, 0.2);
+    }
 
-  0%,
-  100% {
-    text-shadow: 0 0 10px rgba(255, 87, 34, 0.4), 0 0 20px rgba(255, 87, 34, 0.2);
+    50% {
+      text-shadow: 0 0 20px rgba(255, 87, 34, 0.7), 0 0 30px rgba(255, 179, 0, 0.4);
+    }
   }
 
-  50% {
-    text-shadow: 0 0 20px rgba(255, 87, 34, 0.7), 0 0 30px rgba(255, 179, 0, 0.4);
+  .animate-glow {
+    animation: pulseGlow 3s infinite ease-in-out;
   }
-}
-
-.animate-glow {
-  animation: pulseGlow 3s infinite ease-in-out;
 }
 
 /* Subtle background grid pattern representing precision styling */

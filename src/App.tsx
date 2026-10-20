@@ -121,18 +121,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Lock background scroll when mobile drawer is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileMenuOpen]);
-
   // Close drawer on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -209,35 +197,42 @@ export default function App() {
     }
   }, [loading]);
 
-  // Track scrolling to update sticky navbar focus
+  // Track scrolling with requestAnimationFrame throttle to eliminate mobile scroll lag
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      const header = document.querySelector("header");
-      const headerHeight = header ? header.offsetHeight : 68;
-      const scrollPosition = window.scrollY + headerHeight + 60;
-      const sectionConfigs = [
-        { spyId: "hero", navId: "hero" },
-        { spyId: "features", navId: "features" },
-        { spyId: "download-section", navId: "download" },
-        { spyId: "about", navId: "about" },
-        { spyId: "social", navId: "social" },
-        { spyId: "policy", navId: "policy" }
-      ];
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrollY = window.scrollY;
+          const scrollPosition = scrollY + 128;
 
-      if (window.scrollY < 80) {
-        setActiveSection("hero");
-        return;
-      }
-
-      for (let i = sectionConfigs.length - 1; i >= 0; i--) {
-        const item = sectionConfigs[i];
-        const el = document.getElementById(item.spyId);
-        if (el) {
-          if (scrollPosition >= el.offsetTop) {
-            setActiveSection(item.navId);
-            break;
+          if (scrollY < 80) {
+            setActiveSection((prev) => (prev !== "hero" ? "hero" : prev));
+            ticking = false;
+            return;
           }
-        }
+
+          const sectionConfigs = [
+            { spyId: "hero", navId: "hero" },
+            { spyId: "features", navId: "features" },
+            { spyId: "download-section", navId: "download" },
+            { spyId: "about", navId: "about" },
+            { spyId: "social", navId: "social" },
+            { spyId: "policy", navId: "policy" }
+          ];
+
+          for (let i = sectionConfigs.length - 1; i >= 0; i--) {
+            const item = sectionConfigs[i];
+            const el = document.getElementById(item.spyId);
+            if (el && scrollPosition >= el.offsetTop) {
+              setActiveSection((prev) => (prev !== item.navId ? item.navId : prev));
+              break;
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
@@ -331,8 +326,8 @@ export default function App() {
           >
             {/* Visual game background elements for loader */}
             <div className="absolute inset-0 bg-grid-pattern opacity-15" />
-            <div className="absolute top-[30%] left-[20%] w-72 h-72 rounded-full bg-[#FF5722]/10 blur-[120px]" />
-            <div className="absolute bottom-[30%] right-[20%] w-72 h-72 rounded-full bg-[#22D3EE]/10 blur-[120px]" />
+            <div className="absolute top-[30%] left-[20%] w-72 h-72 rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.12)_0%,transparent_70%)] pointer-events-none" />
+            <div className="absolute bottom-[30%] right-[20%] w-72 h-72 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.1)_0%,transparent_70%)] pointer-events-none" />
 
             <div className="relative text-center max-w-md w-full bg-[#111521] border border-white/10 p-8 rounded-3xl neon-border-orange shadow-2xl">
               {/* Flame Logo Animated Container */}
@@ -382,40 +377,33 @@ export default function App() {
       {/* Main Page Layout */}
       {!loading && (
         <>
-          {/* Neon Floating Particles Layer */}
+          {/* Ambient Lighting Layer (GPU-friendly radial gradients with 0 blur penalty) */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-            {/* Ambient Colors */}
-            <div className="absolute top-[10%] left-[5%] w-96 h-96 rounded-full bg-[#FF5722]/5 blur-[120px]" />
-            <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#22D3EE]/5 blur-[150px]" />
-            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#FF5722]/5 blur-[150px]" />
-            <div className="absolute bottom-0 right-[20%] w-96 h-96 rounded-full bg-[#FFB300]/5 blur-[120px]" />
+            <div className="absolute top-[10%] left-[5%] w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.06)_0%,transparent_70%)]" />
+            <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.05)_0%,transparent_70%)]" />
+            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.05)_0%,transparent_70%)]" />
+            <div className="absolute bottom-0 right-[20%] w-96 h-96 rounded-full bg-[radial-gradient(circle,rgba(255,179,0,0.05)_0%,transparent_70%)]" />
 
-            {/* Animated Light Particles simulating floating laser sparks */}
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-gradient-to-tr from-[#FF5722] to-[#FFB300] opacity-25"
-                style={{
-                  top: `${Math.random() * 95}%`,
-                  left: `${Math.ceil(Math.random() * 98)}%`,
-                }}
-                animate={{
-                  y: [0, -100 - Math.random() * 150],
-                  x: [0, (Math.random() - 0.5) * 50],
-                  opacity: [0, 0.5, 0.4, 0]
-                }}
-                transition={{
-                  duration: 6 + Math.random() * 8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: Math.random() * 4
-                }}
-              />
-            ))}
+            {/* Subtle Ambient Particles - desktop only to preserve mobile 60-120fps */}
+            <div className="hidden md:block">
+              {[
+                { top: "15%", left: "22%" },
+                { top: "35%", left: "78%" },
+                { top: "55%", left: "14%" },
+                { top: "72%", left: "85%" },
+                { top: "88%", left: "42%" }
+              ].map((p, i) => (
+                <div
+                  key={i}
+                  className="absolute w-1 h-1 rounded-full bg-[#FF5722]/30"
+                  style={{ top: p.top, left: p.left }}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Sticky Header Nav */}
-          <header className="sticky top-0 bg-[#111521]/95 backdrop-blur-md border-b border-white/10 z-40 transition-all duration-300">
+          <header className="sticky top-0 bg-[#111521] md:bg-[#111521]/95 md:backdrop-blur-md border-b border-white/10 z-40">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
               {/* Brand Logo */}
               <a href="#hero" onClick={(e) => scrollToSection(e, "hero")} className="flex items-center space-x-3 group cursor-pointer">
@@ -498,21 +486,22 @@ export default function App() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-50 md:hidden"
+                className="fixed inset-0 z-50 md:hidden touch-none"
               >
-                {/* Backdrop Overlay */}
+                {/* Backdrop Overlay (zero-blur for maximum 60-120fps mobile performance) */}
                 <div
                   onClick={() => setMobileMenuOpen(false)}
-                  className="absolute inset-0 bg-[#000000]/80 backdrop-blur-sm cursor-pointer"
+                  className="absolute inset-0 bg-black/80 cursor-pointer"
                 />
 
-                {/* Drawer Panel Sliding in from Right */}
+                {/* Drawer Panel Sliding in from Right (hardware-accelerated via will-change) */}
                 <motion.div
                   initial={{ x: "100%" }}
                   animate={{ x: 0 }}
                   exit={{ x: "100%" }}
-                  transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
-                  className="absolute top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[#111521] border-l border-white/10 shadow-2xl flex flex-col justify-between z-10 overflow-y-auto"
+                  transition={{ type: "tween", duration: 0.22, ease: "easeOut" }}
+                  style={{ willChange: "transform" }}
+                  className="absolute top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[#111521] border-l border-white/10 shadow-2xl flex flex-col justify-between z-10 overflow-y-auto overscroll-contain touch-pan-y"
                 >
                   {/* Drawer Header */}
                   <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#111521]">
@@ -732,16 +721,11 @@ export default function App() {
 
               {/* Feature Cards Grid (4 custom cards) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {FeaturesList.map((feature, idx) => (
-                  <motion.div
+                {FeaturesList.map((feature) => (
+                  <div
                     key={feature.id}
                     id={`feature-card-${feature.id}`}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: idx * 0.05 }}
-                    whileHover={{ y: -6, borderColor: "rgba(255, 87, 34, 0.4)", boxShadow: "0 10px 25px -5px rgba(255, 87, 34, 0.12)" }}
-                    className="bg-[#111521] border border-white/10 p-6 rounded-2xl transition-all duration-300 relative group flex flex-col justify-between shadow-xl"
+                    className="bg-[#111521] border border-white/10 md:hover:border-[#FF5722]/50 md:hover:-translate-y-1 p-6 rounded-2xl transition-all duration-200 relative group flex flex-col justify-between shadow-xl"
                   >
                     <div className="space-y-4 text-left">
                       {/* Icon wrapper */}
@@ -764,7 +748,7 @@ export default function App() {
                     <div className="pt-4 flex items-center justify-start text-[10px] text-[#22D3EE] font-mono tracking-wider font-extrabold uppercase pointer-events-none opacity-80">
                       VERIFIED SYSTEM
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -774,8 +758,8 @@ export default function App() {
           <section id="download-section" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative overflow-hidden">
             {/* Visual background decorations */}
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
-            <div className="absolute top-[20%] left-[-15%] w-[450px] h-[450px] rounded-full bg-[#FF5722]/10 blur-[130px]" />
-            <div className="absolute bottom-[2%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[#22D3EE]/10 blur-[130px]" />
+            <div className="absolute top-[20%] left-[-15%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.06)_0%,transparent_70%)] pointer-events-none" />
+            <div className="absolute bottom-[2%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.05)_0%,transparent_70%)] pointer-events-none" />
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -1041,13 +1025,12 @@ export default function App() {
                   );
 
                   return (
-                    <motion.a
+                    <a
                       key={social.name}
                       href={social.url}
                       target="_blank"
                       rel="noreferrer"
-                      whileHover={{ scale: 1.02, y: -4 }}
-                      className="block bg-[#111521] border border-white/10 hover:border-[#FF5722]/50 p-6 rounded-2xl shadow-xl transition-all duration-300 group cursor-pointer"
+                      className="block bg-[#111521] border border-white/10 md:hover:border-[#FF5722]/50 md:hover:-translate-y-1 p-6 rounded-2xl shadow-xl transition-all duration-200 group cursor-pointer"
                     >
                       <div className="flex flex-col h-full justify-between space-y-4">
                         <div className="w-10 h-10 rounded-xl bg-[#151A29] border border-white/5 flex items-center justify-center transition-all group-hover:scale-110">
@@ -1065,7 +1048,7 @@ export default function App() {
                           <ExternalLink className="w-3 h-3" />
                         </div>
                       </div>
-                    </motion.a>
+                    </a>
                   );
                 })}
               </div>
