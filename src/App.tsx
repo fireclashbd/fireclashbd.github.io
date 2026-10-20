@@ -46,7 +46,7 @@ import {
 
 // Type definitions & Icons mapping helper
 function FeatureIcon({ name, className }: { name: string; className?: string }) {
-  const iconProps = { className: className || "w-6 h-6 text-orange-500" };
+  const iconProps = { className: className || "w-6 h-6 text-[#FF5722]" };
   switch (name) {
     case "ShieldCheck": return <ShieldCheck {...iconProps} />;
     case "Lock": return <Lock {...iconProps} />;
@@ -83,6 +83,7 @@ export default function App() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloadFinished, setDownloadFinished] = useState(false);
+  const [downloadButtonHighlight, setDownloadButtonHighlight] = useState(false);
 
   // Policy Accordions expanded state
   const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>("user-data");
@@ -120,6 +121,81 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Lock background scroll when mobile drawer is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Helper to handle smooth scrolling (with #download pointing directly to the download button itself)
+  const scrollToSection = (e?: React.MouseEvent | React.TouchEvent, id?: string) => {
+    if (e) {
+      e.preventDefault();
+    }
+    if (!id) return;
+
+    setMobileMenuOpen(false);
+
+    if (id === "hero") {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+      window.history.pushState(null, "", "#hero");
+      setActiveSection("hero");
+      return;
+    }
+
+    let element = document.getElementById(id);
+    if (!element && id === "download") {
+      element = document.getElementById("download-direct-btn") || document.getElementById("download-section");
+    }
+
+    if (element) {
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.getBoundingClientRect().height : 68;
+      const elementTop = element.getBoundingClientRect().top + window.scrollY;
+
+      let targetScrollTop = Math.max(0, Math.round(elementTop - headerHeight));
+
+      if (id === "download") {
+        // Highlight download button so the user immediately spots it
+        setDownloadButtonHighlight(true);
+        setTimeout(() => setDownloadButtonHighlight(false), 2400);
+
+        // Bring download button into comfortable, prime view
+        const viewportHeight = window.innerHeight;
+        const offset = viewportHeight > 700 ? Math.round(viewportHeight * 0.32) : headerHeight + 20;
+        targetScrollTop = Math.max(0, Math.round(elementTop - offset));
+      }
+
+      window.scrollTo({
+        top: targetScrollTop,
+        behavior: "smooth"
+      });
+
+      window.history.pushState(null, "", `#${id}`);
+      setActiveSection("download");
+    }
+  };
+
   // Handle auto-scroll on mount if hash is present in URL, after loader finishes
   useEffect(() => {
     if (!loading) {
@@ -127,20 +203,7 @@ export default function App() {
       if (hash) {
         const id = hash.replace("#", "");
         setTimeout(() => {
-          const element = document.getElementById(id);
-          if (element) {
-            const header = document.querySelector("header");
-            const headerHeight = header ? header.offsetHeight : 80;
-            const style = window.getComputedStyle(element);
-            const paddingTop = parseFloat(style.paddingTop) || 0;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerHeight + paddingTop - 20;
-            
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth"
-            });
-          }
+          scrollToSection(undefined, id);
         }, 300);
       }
     }
@@ -149,22 +212,36 @@ export default function App() {
   // Track scrolling to update sticky navbar focus
   useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const sections = ["hero", "features", "download", "about", "social", "policy"];
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.offsetHeight : 68;
+      const scrollPosition = window.scrollY + headerHeight + 60;
+      const sectionConfigs = [
+        { spyId: "hero", navId: "hero" },
+        { spyId: "features", navId: "features" },
+        { spyId: "download-section", navId: "download" },
+        { spyId: "about", navId: "about" },
+        { spyId: "social", navId: "social" },
+        { spyId: "policy", navId: "policy" }
+      ];
 
-      for (const section of sections) {
-        const el = document.getElementById(section);
+      if (window.scrollY < 80) {
+        setActiveSection("hero");
+        return;
+      }
+
+      for (let i = sectionConfigs.length - 1; i >= 0; i--) {
+        const item = sectionConfigs[i];
+        const el = document.getElementById(item.spyId);
         if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 120 && rect.bottom >= 120) {
-            setActiveSection(section);
+          if (scrollPosition >= el.offsetTop) {
+            setActiveSection(item.navId);
             break;
           }
         }
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -239,51 +316,25 @@ export default function App() {
     setHasRegisteredMatch(matchId);
   };
 
-  // Helper to handle smooth scrolling with offset for the sticky header
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    setMobileMenuOpen(false);
-    
-    // Slight delay to allow DOM/state updates to begin or settle
-    setTimeout(() => {
-      const element = document.getElementById(id);
-      if (element) {
-        const header = document.querySelector("header");
-        const headerHeight = header ? header.offsetHeight : 80;
-        const style = window.getComputedStyle(element);
-        const paddingTop = parseFloat(style.paddingTop) || 0;
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerHeight + paddingTop - 20;
-        
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth"
-        });
-        
-        // Update URL hash without reload
-        window.history.pushState(null, "", `#${id}`);
-      }
-    }, 100);
-  };
 
   return (
-    <div className="min-h-screen bg-[#030305] text-slate-100 font-sans tracking-wide selection:bg-[#ff4e00] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0B0F17] text-white font-sans tracking-wide selection:bg-[#FF5722] selection:text-white relative overflow-x-hidden">
 
       {/* Loading Screen Overlay */}
       <AnimatePresence>
         {loading && (
           <motion.div
             id="loading-screen"
-            className="fixed inset-0 bg-[#030305] z-50 flex flex-col items-center justify-center p-6"
+            className="fixed inset-0 bg-[#0B0F17] z-50 flex flex-col items-center justify-center p-6"
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
             {/* Visual game background elements for loader */}
             <div className="absolute inset-0 bg-grid-pattern opacity-15" />
-            <div className="absolute top-[30%] left-[20%] w-72 h-72 rounded-full bg-[#ff4e00]/10 blur-[120px]" />
-            <div className="absolute bottom-[30%] right-[20%] w-72 h-72 rounded-full bg-[#ec1c24]/10 blur-[120px]" />
+            <div className="absolute top-[30%] left-[20%] w-72 h-72 rounded-full bg-[#FF5722]/10 blur-[120px]" />
+            <div className="absolute bottom-[30%] right-[20%] w-72 h-72 rounded-full bg-[#22D3EE]/10 blur-[120px]" />
 
-            <div className="relative text-center max-w-md w-full glass-panel p-8 rounded-3xl neon-border-orange">
+            <div className="relative text-center max-w-md w-full bg-[#111521] border border-white/10 p-8 rounded-3xl neon-border-orange shadow-2xl">
               {/* Flame Logo Animated Container */}
               <motion.div
                 className="w-24 h-24 mx-auto mb-6 flex items-center justify-center relative"
@@ -291,8 +342,8 @@ export default function App() {
                 transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
               >
                 {/* Glowing Aura Ring */}
-                <span className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[#ff4e00] to-[#ec1c24] opacity-30 blur-md" />
-                <span className="absolute inset-1 rounded-xl bg-slate-950 border border-white/10 flex items-center justify-center overflow-hidden">
+                <span className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#FFB300] opacity-30 blur-md" />
+                <span className="absolute inset-1 rounded-xl bg-[#0B0F17] border border-white/10 flex items-center justify-center overflow-hidden">
                   <img
                     src={appIcon}
                     alt="Fire Clash BD"
@@ -303,25 +354,25 @@ export default function App() {
               </motion.div>
 
               {/* Title representation */}
-              <h1 className="text-2xl font-black font-display tracking-wider mb-2 bg-gradient-to-r from-[#ff4e00] via-[#ff6525] to-[#ec1c24] bg-clip-text text-transparent">
+              <h1 className="text-2xl font-black font-display tracking-wider mb-2 bg-gradient-to-r from-[#FF5722] via-[#FF7043] to-[#FFB300] bg-clip-text text-transparent">
                 FIRE CLASH BD
               </h1>
-              <p className="text-xs text-gray-500 font-mono tracking-widest uppercase mb-8">
-                BANGLADESH'S PREMIER ESPORTS SYSTEM
+              <p className="text-xs text-[#22D3EE] font-mono tracking-widest uppercase mb-8 font-semibold">
+                Every Match Matters.
               </p>
 
               {/* Loading progress bar */}
-              <div className="h-[4px] bg-slate-900 border border-white/5 rounded-full w-full overflow-hidden mb-3">
+              <div className="h-[4px] bg-[#151A29] border border-white/5 rounded-full w-full overflow-hidden mb-3">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-[#ff4e00] via-[#ec1c24] to-amber-500"
+                  className="h-full bg-gradient-to-r from-[#FF5722] via-[#FF7043] to-[#FFB300]"
                   style={{ width: `${loadPercentage}%` }}
                 />
               </div>
 
               {/* Counter progress */}
-              <div className="flex justify-between items-center text-xs font-mono text-gray-450">
+              <div className="flex justify-between items-center text-xs font-mono text-gray-400">
                 <span>{loadText}</span>
-                <span className="text-[#ff4e00] font-bold">{loadPercentage}%</span>
+                <span className="text-[#FF5722] font-bold">{loadPercentage}%</span>
               </div>
             </div>
           </motion.div>
@@ -334,16 +385,16 @@ export default function App() {
           {/* Neon Floating Particles Layer */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
             {/* Ambient Colors */}
-            <div className="absolute top-[10%] left-[5%] w-96 h-96 rounded-full bg-[#ff4e00]/5 blur-[120px]" />
-            <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#ec1c24]/5 blur-[150px]" />
-            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#ff4e00]/5 blur-[150px]" />
-            <div className="absolute bottom-0 right-[20%] w-96 h-96 rounded-full bg-[#ec1c24]/5 blur-[120px]" />
+            <div className="absolute top-[10%] left-[5%] w-96 h-96 rounded-full bg-[#FF5722]/5 blur-[120px]" />
+            <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#22D3EE]/5 blur-[150px]" />
+            <div className="absolute bottom-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#FF5722]/5 blur-[150px]" />
+            <div className="absolute bottom-0 right-[20%] w-96 h-96 rounded-full bg-[#FFB300]/5 blur-[120px]" />
 
             {/* Animated Light Particles simulating floating laser sparks */}
             {[...Array(12)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-gradient-to-tr from-[#ff4e00] to-[#ec1c24] opacity-25"
+                className="absolute w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-gradient-to-tr from-[#FF5722] to-[#FFB300] opacity-25"
                 style={{
                   top: `${Math.random() * 95}%`,
                   left: `${Math.ceil(Math.random() * 98)}%`,
@@ -363,27 +414,29 @@ export default function App() {
             ))}
           </div>
 
-          {/* Sticky Header Nav - Styled with sharp glass border */}
-          <header className="sticky top-0 bg-[#030305]/80 backdrop-blur-md border-b border-white/5 z-40 transition-all duration-300">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          {/* Sticky Header Nav */}
+          <header className="sticky top-0 bg-[#111521]/95 backdrop-blur-md border-b border-white/10 z-40 transition-all duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
               {/* Brand Logo */}
-              <a href="#hero" className="flex items-center space-x-3 group">
+              <a href="#hero" onClick={(e) => scrollToSection(e, "hero")} className="flex items-center space-x-3 group cursor-pointer">
                 <img
                   src={appIcon}
                   alt="Fire Clash BD Icon"
-                  className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-[#ff4e00]/10 group-hover:shadow-[#ff4e00]/30 transition-all duration-300"
+                  className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-[#FF5722]/15 group-hover:shadow-[#FF5722]/30 transition-all duration-300"
                   referrerPolicy="no-referrer"
                 />
                 <div>
-                  <h2 className="text-lg font-black font-display tracking-wider bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] bg-clip-text text-transparent group-hover:from-orange-400 group-hover:to-red-400 transition-all">
+                  <h2 className="text-lg font-black font-display tracking-wider text-white group-hover:text-[#FF5722] transition-colors">
                     FIRE CLASH BD
                   </h2>
-                  <p className="text-[9px] text-gray-500 font-mono tracking-widest uppercase">ESPORTS PLATFORM</p>
+                  <p className="text-[9px] text-[#22D3EE] font-mono tracking-widest font-bold uppercase">
+                    EVERY MATCH MATTERS.
+                  </p>
                 </div>
               </a>
 
               {/* Desktop Menu links */}
-              <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold">
+              <nav className="hidden md:flex items-center space-x-7 text-sm font-semibold">
                 {[
                   { id: "hero", label: "Home" },
                   { id: "features", label: "Features" },
@@ -396,14 +449,15 @@ export default function App() {
                     key={item.id}
                     href={`#${item.id}`}
                     onClick={(e) => scrollToSection(e, item.id)}
-                    className={`hover:text-[#ff4e00] transition-colors uppercase tracking-wider text-xs font-display relative py-2 ${activeSection === item.id ? "text-orange-400 font-bold" : "text-gray-400"
-                      }`}
+                    className={`hover:text-[#FF5722] transition-colors uppercase tracking-wider text-xs font-display relative py-2 cursor-pointer ${
+                      activeSection === item.id ? "text-[#FF5722] font-bold" : "text-gray-300"
+                    }`}
                   >
                     {item.label}
                     {activeSection === item.id && (
                       <motion.span
                         layoutId="activeIndicator"
-                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] rounded-full"
+                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FF5722] rounded-full"
                       />
                     )}
                   </a>
@@ -414,105 +468,196 @@ export default function App() {
               <div className="hidden md:flex items-center space-x-4">
                 <a
                   href="#download"
-                  className="flex items-center gap-2 bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] hover:from-[#ff621e] hover:to-[#f03138] text-white font-display text-xs font-semibold uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-lg shadow-[#ff4e00]/15 hover:shadow-[#ff4e00]/30 transition-all duration-300 border border-white/5"
+                  onClick={(e) => scrollToSection(e, "download")}
+                  className="flex items-center gap-2 bg-[#FF5722] hover:bg-[#F4511E] text-white font-display text-xs font-semibold uppercase tracking-wider py-2.5 px-4 rounded-xl shadow-lg shadow-[#FF5722]/20 hover:shadow-[#FF5722]/40 transition-all duration-300 border border-white/5 cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-white" />
                   <span>Download APK</span>
                 </a>
               </div>
 
-              {/* Mobile hamburger click */}
+              {/* Mobile hamburger menu button */}
               <button
-                id="mobile-menu-toggle"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden flex items-center p-2 text-gray-400 hover:text-white"
+                id="mobile-drawer-toggle"
+                type="button"
+                aria-label={mobileMenuOpen ? "Close navigation drawer" : "Open navigation drawer"}
+                onClick={() => setMobileMenuOpen(prev => !prev)}
+                className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-[#151A29] text-white hover:text-[#FF5722] border border-white/10 active:scale-95 transition-all cursor-pointer relative z-50 shadow-md"
               >
-                {mobileMenuOpen ? <X className="w-6 h-6 text-orange-500" /> : <Menu className="w-6 h-6" />}
+                {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
               </button>
             </div>
+          </header>
 
-            {/* Mobile Dropdown Overlay */}
-            <AnimatePresence>
-              {mobileMenuOpen && (
+          {/* Mobile Navigation Drawer (Right Side) */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.div
+                key="mobile-nav-drawer-wrapper"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-50 md:hidden"
+              >
+                {/* Backdrop Overlay */}
+                <div
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="absolute inset-0 bg-[#000000]/80 backdrop-blur-sm cursor-pointer"
+                />
+
+                {/* Drawer Panel Sliding in from Right */}
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="absolute top-full left-0 right-0 bg-[#030305]/95 border-b border-white/5 md:hidden"
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
+                  className="absolute top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[#111521] border-l border-white/10 shadow-2xl flex flex-col justify-between z-10 overflow-y-auto"
                 >
-                  <div className="px-5 py-6 space-y-4 font-display">
+                  {/* Drawer Header */}
+                  <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#111521]">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={appIcon}
+                        alt="Fire Clash BD"
+                        className="w-9 h-9 rounded-xl object-cover shadow-md shadow-[#FF5722]/15"
+                      />
+                      <div>
+                        <h3 className="font-display font-black text-sm text-white tracking-wider">
+                          FIRE CLASH BD
+                        </h3>
+                        <p className="text-[10px] text-[#22D3EE] font-mono tracking-wider font-semibold uppercase">
+                          Every Match Matters.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-label="Close navigation drawer"
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#151A29] text-gray-300 hover:text-white border border-white/10 active:scale-95 transition-all cursor-pointer"
+                    >
+                      <X className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+
+                  {/* Drawer Navigation Links */}
+                  <div className="p-5 space-y-2 flex-1 overflow-y-auto">
+                    <div className="flex items-center justify-between mb-3 px-2">
+                      <p className="text-[10px] uppercase font-mono tracking-widest text-gray-400 font-bold">
+                        Menu Navigation
+                      </p>
+                      <span className="text-[10px] text-[#22D3EE] font-mono bg-[#151A29] px-2 py-0.5 rounded-full border border-[#22D3EE]/20">
+                        Esports BD
+                      </span>
+                    </div>
+
                     {[
-                      { id: "hero", label: "Home" },
-                      { id: "features", label: "Features" },
-                      { id: "download", label: "Download APK" },
-                      { id: "about", label: "About" },
-                      { id: "social", label: "Socials" },
-                      { id: "policy", label: "Rules & Policy" }
-                    ].map((item) => (
-                      <a
-                        key={item.id}
-                        href={`#${item.id}`}
-                        onClick={(e) => scrollToSection(e, item.id)}
-                        className={`block text-sm uppercase tracking-widest py-2 transition-colors ${activeSection === item.id ? "text-[#ff4e00] font-bold" : "text-gray-300 hover:text-[#ff4e00]"
+                      { id: "hero", label: "Home", icon: PlayCircle },
+                      { id: "features", label: "Features", icon: Sparkles },
+                      { id: "download", label: "Download APK", icon: Download },
+                      { id: "about", label: "About", icon: Shield },
+                      { id: "social", label: "Socials", icon: Share2 },
+                      { id: "policy", label: "Rules & Policy", icon: ShieldCheck }
+                    ].map((item) => {
+                      const isActive = activeSection === item.id;
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            scrollToSection(undefined, item.id);
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-display uppercase tracking-wider transition-all text-left cursor-pointer ${
+                            isActive
+                              ? "bg-[#151A29] text-[#FF5722] font-bold border-l-4 border-[#FF5722]"
+                              : "text-gray-300 hover:text-white hover:bg-[#151A29]"
                           }`}
-                      >
-                        {item.label}
-                      </a>
-                    ))}
-                    <div className="pt-4 border-t border-white/5">
-                      <a
-                        href="#download"
-                        onClick={(e) => scrollToSection(e, "download")}
-                        className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] hover:from-[#ff621e] hover:to-[#f03138] text-white font-display text-xs font-bold uppercase tracking-widest rounded-xl shadow-md border border-white/5"
-                      >
-                        <Download className="w-4 h-4 text-white" />
-                        <span>Download APK</span>
-                      </a>
+                        >
+                          <span className="flex items-center gap-3">
+                            <Icon className={`w-4 h-4 ${isActive ? "text-[#FF5722]" : "text-gray-400"}`} />
+                            <span>{item.label}</span>
+                          </span>
+                          {isActive ? (
+                            <span className="w-2 h-2 rounded-full bg-[#FF5722]" />
+                          ) : (
+                            <ArrowRight className="w-3.5 h-3.5 text-gray-500 opacity-40" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Drawer Footer CTA & Key Specs */}
+                  <div className="p-5 border-t border-white/10 bg-[#0B0F17]/90 space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        scrollToSection(undefined, "download");
+                      }}
+                      className="w-full py-3.5 px-4 bg-[#FF5722] hover:bg-[#F4511E] text-white font-display text-xs font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-[#FF5722]/25 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                    >
+                      <Download className="w-4 h-4 text-white" />
+                      <span>Download APK ({AppMetaData.apkVersion})</span>
+                    </button>
+
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div className="bg-[#151A29] p-2 rounded-lg border border-white/5">
+                        <p className="text-[9px] text-gray-400 font-mono uppercase">Prize Paid</p>
+                        <p className="text-xs font-black font-display text-[#FFB300]">{AppMetaData.totalPricePaid}</p>
+                      </div>
+                      <div className="bg-[#151A29] p-2 rounded-lg border border-white/5">
+                        <p className="text-[9px] text-gray-400 font-mono uppercase">Active Gamers</p>
+                        <p className="text-xs font-black font-display text-[#22D3EE]">{AppMetaData.activeGamers}</p>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </header>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
 
           {/* Section 1: Hero Section */}
-          <section id="hero" className="relative pt-6 md:pt-16 pb-16 md:pb-28 bg-grid-pattern overflow-hidden">
+          <section id="hero" className="relative pt-6 md:pt-14 pb-14 md:pb-20 bg-[#0B0F17] bg-grid-pattern overflow-hidden">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
               <div className="space-y-8">
-                {/* Bangladesh Pride Badge */}
-                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-[#ec1c24]/10 via-slate-950/40 to-[#ff4e00]/10 border border-white/5 text-orange-400 text-[10px] md:text-xs font-bold uppercase py-1.5 px-4 rounded-full tracking-wider">
-                  <span className="w-2.5 h-2.5 bg-red-650 rounded-full border border-[#006a4e]" />
-                  <span>#1 Free Fire esports app in Bangladesh</span>
+                {/* Bangladesh Pride Badge with Tagline */}
+                <div className="inline-flex items-center space-x-2 bg-[#151A29] border border-white/10 text-[#22D3EE] text-[10px] md:text-xs font-bold uppercase py-1.5 px-4 rounded-full tracking-wider font-mono shadow-sm">
+                  <span className="w-2.5 h-2.5 bg-[#22C55E] rounded-full border border-black/40 animate-pulse" />
+                  <span>#1 Free Fire esports app in Bangladesh • Every Match Matters.</span>
                 </div>
 
                 {/* Main Header */}
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight leading-tight uppercase max-w-3xl mx-auto">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight leading-tight uppercase max-w-3xl mx-auto text-white">
                   Bangladesh’s Ultimate{" "}
-                  <span className="bg-gradient-to-r from-[#ff4e00] via-[#ff6525] to-[#ec1c24] bg-clip-text text-transparent block md:inline animate-glow">
+                  <span className="bg-gradient-to-r from-[#FF5722] via-[#FF7043] to-[#FFB300] bg-clip-text text-transparent block md:inline animate-glow">
                     Free Fire
                   </span>{" "}
                   Tournament Platform
                 </h1>
 
                 {/* Description Paragraph */}
-                <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto leading-relaxed font-sans">
-                  Join professional matches, defeat top-tier rooms, secure instant rewards, and transfer your winnings directly into cash. Your raw combat skill is the only key to gaming fortune.
+                <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed font-sans">
+                  <strong className="text-[#22D3EE] font-semibold">Every Match Matters.</strong> Join professional scrims, compete in structured lobbies, secure instant rewards, and transfer your winnings directly into cash. Your raw combat skill is the only key to gaming fortune.
                 </p>
 
                 {/* Statistics block showing scale of operations */}
-                <div className="grid grid-cols-3 gap-3 max-w-md mx-auto border-t border-b border-white/5 py-4 font-display">
-                  <div>
-                    <h4 className="text-xl md:text-2xl font-black text-[#ff4e00]">{AppMetaData.activeGamers}</h4>
-                    <p className="text-[10px] uppercase text-gray-500 tracking-wider">Active Gamers</p>
+                <div className="grid grid-cols-3 gap-3 max-w-lg mx-auto bg-[#111521] border border-white/10 p-3 rounded-2xl font-display shadow-xl">
+                  <div className="bg-[#151A29] p-3 rounded-xl text-center border border-white/5">
+                    <h4 className="text-xl md:text-2xl font-black text-[#22D3EE]">{AppMetaData.activeGamers}</h4>
+                    <p className="text-[10px] uppercase text-gray-400 font-mono tracking-wider mt-0.5">Active Gamers</p>
                   </div>
-                  <div>
-                    <h4 className="text-xl md:text-2xl font-black text-[#ff6525]">{AppMetaData.totalPricePaid}</h4>
-                    <p className="text-[10px] uppercase text-gray-500 tracking-wider">Total Prize Paid</p>
+                  <div className="bg-[#151A29] p-3 rounded-xl text-center border border-white/5">
+                    <h4 className="text-xl md:text-2xl font-black text-[#FFB300]">{AppMetaData.totalPricePaid}</h4>
+                    <p className="text-[10px] uppercase text-gray-400 font-mono tracking-wider mt-0.5">Prize Paid</p>
                   </div>
-                  <div>
-                    <h4 className="text-xl md:text-2xl font-black text-[#ec1c24]">{AppMetaData.tournamentsDone}</h4>
-                    <p className="text-[10px] uppercase text-gray-500 tracking-wider">Tournaments Done</p>
+                  <div className="bg-[#151A29] p-3 rounded-xl text-center border border-white/5">
+                    <h4 className="text-xl md:text-2xl font-black text-[#FF5722]">{AppMetaData.tournamentsDone}</h4>
+                    <p className="text-[10px] uppercase text-gray-400 font-mono tracking-wider mt-0.5">Tournaments</p>
                   </div>
                 </div>
 
@@ -521,7 +666,8 @@ export default function App() {
                   {/* Glowing Android APK Download */}
                   <a
                     href="#download"
-                    className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#ff4e00] via-[#ff6525] to-[#ec1c24] hover:from-[#ff621e] hover:to-[#f03138] text-white font-display text-sm font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff4e00]/15 hover:shadow-[#ff4e00]/30 transition-all duration-300 border border-white/5 text-center flex items-center justify-center gap-2 group"
+                    onClick={(e) => scrollToSection(e, "download")}
+                    className="w-full sm:w-auto px-8 py-4 bg-[#FF5722] hover:bg-[#F4511E] text-white font-display text-sm font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-[#FF5722]/25 hover:shadow-[#FF5722]/40 transition-all duration-300 border border-white/10 text-center flex items-center justify-center gap-2 group cursor-pointer"
                   >
                     <Download className="w-5 h-5 text-white active:scale-90 group-hover:translate-y-0.5 transition-transform" />
                     <span>Download Latest APK</span>
@@ -533,23 +679,24 @@ export default function App() {
                       href="https://www.tiktok.com/@fire_clash_bd"
                       target="_blank"
                       rel="noreferrer"
-                      className="w-12 h-12 flex items-center justify-center border border-white/10 hover:border-orange-500/35 bg-white/5 hover:bg-orange-500/5 rounded-xl transition-all font-semibold"
+                      className="w-12 h-12 flex items-center justify-center border border-white/10 hover:border-[#FF5722]/50 bg-[#151A29] hover:bg-[#151A29]/80 rounded-xl transition-all font-semibold"
                       title="Follow us on Tiktok"
                     >
                       <svg
-                        className="w-5 h-5 fill-current text-gray-300 hover:text-orange-500 transition-colors"
+                        className="w-5 h-5 fill-current text-gray-300 hover:text-[#FF5722] transition-colors"
                         viewBox="0 0 24 24"
                       >
                         <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.59 4.23.94.12 1.88.22 2.82.35v3.83c-1.63-.04-3.23-.46-4.66-1.25-.04 1.77-.02 3.55-.02 5.32 0 3.16-.94 6.36-3.86 7.82-3.14 1.74-7.46.99-9.69-1.85-2.28-2.67-1.85-7.1 1.02-9.21 2.37-1.86 5.86-1.74 8.08.33.02 1.34.01 2.68.01 4.02-1.57-1.16-3.87-1.1-5.26.25-1.46 1.32-1.56 3.79-.23 5.23 1.34 1.53 3.93 1.63 5.37.23.86-.77 1.25-1.95 1.22-3.11V.02z" />
-                      </svg>                    </a>
+                      </svg>
+                    </a>
                     <a
                       href="https://www.youtube.com/@fire_clash_bd"
                       target="_blank"
                       rel="noreferrer"
-                      className="w-12 h-12 flex items-center justify-center border border-white/10 hover:border-orange-500/35 bg-white/5 hover:bg-orange-500/5 rounded-xl transition-all font-semibold"
-                      title="Subcribe our YouTube channel"
+                      className="w-12 h-12 flex items-center justify-center border border-white/10 hover:border-[#FF5722]/50 bg-[#151A29] hover:bg-[#151A29]/80 rounded-xl transition-all font-semibold"
+                      title="Subscribe our YouTube channel"
                     >
-                      <svg className="w-5 h-5 fill-current text-gray-300 hover:text-orange-500 transition-colors" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 fill-current text-gray-300 hover:text-[#EF4444] transition-colors" viewBox="0 0 24 24">
                         <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.516 0-9.387.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.507 9.386.507 9.386.507s7.517 0 9.387-.507a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                       </svg>
                     </a>
@@ -560,30 +707,30 @@ export default function App() {
           </section>
 
           {/* Section 2: Features Section */}
-          <section id="features" className="py-20 md:py-28 bg-[#06060c] relative">
+          <section id="features" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
             {/* Visual Divider / Section Separator */}
-            <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#030308] to-transparent pointer-events-none" />
+            <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#0B0F17] to-transparent pointer-events-none" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               {/* Header block for section */}
               <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-                <div className="inline-flex items-center space-x-1.5 bg-orange-600/10 border border-orange-500/20 text-orange-400 text-[10px] md:text-xs font-bold uppercase py-1 px-3 rounded-full tracking-wider font-mono">
-                  <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-                  <span>PREMIUM GAMERS ENGINE</span>
+                <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-[10px] md:text-xs font-bold uppercase py-1.5 px-4 rounded-full tracking-wider font-mono">
+                  <Sparkles className="w-3.5 h-3.5 text-[#FF5722]" />
+                  <span>PREMIUM GAMERS ENGINE • EVERY MATCH MATTERS</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight uppercase">
+                <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight uppercase text-white">
                   Why Pick{" "}
-                  <span className="bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+                  <span className="text-[#FF5722]">
                     Fire Clash BD?
                   </span>
                 </h2>
-                <div className="h-[2px] w-20 bg-gradient-to-r from-orange-500 to-red-500 mx-auto rounded-full" />
-                <p className="text-sm text-gray-500 font-sans">
-                  We engineered our application from the grounds up to prioritize fair rules, rapid payments, and transparent results. Discover what makes us Bangladesh's trusted lobby provider.
+                <div className="h-[2px] w-20 bg-[#FF5722] mx-auto rounded-full" />
+                <p className="text-sm text-gray-300 font-sans">
+                  We engineered our application from the grounds up to prioritize fair rules, rapid payouts, and transparent results. Discover what makes us Bangladesh's trusted lobby provider.
                 </p>
               </div>
 
-              {/* Feature Cards Grid (8 custom cards) */}
+              {/* Feature Cards Grid (4 custom cards) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {FeaturesList.map((feature, idx) => (
                   <motion.div
@@ -593,31 +740,28 @@ export default function App() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: idx * 0.05 }}
-                    whileHover={{ y: -6, borderColor: "rgba(255, 78, 0, 0.35)", boxShadow: "0 10px 25px -5px rgba(255, 78, 0, 0.08)" }}
-                    className="bg-[#08080a]/90 border border-white/5 p-6 rounded-2xl transition-all duration-300 relative group flex flex-col justify-between"
+                    whileHover={{ y: -6, borderColor: "rgba(255, 87, 34, 0.4)", boxShadow: "0 10px 25px -5px rgba(255, 87, 34, 0.12)" }}
+                    className="bg-[#111521] border border-white/10 p-6 rounded-2xl transition-all duration-300 relative group flex flex-col justify-between shadow-xl"
                   >
-                    {/* Glowing effect inside the card */}
-                    <span className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-[#ff4e00] to-[#ec1c24] opacity-[0.02] group-hover:opacity-10 blur-xl rounded-tr-2xl transition-all" />
-
                     <div className="space-y-4 text-left">
                       {/* Icon wrapper */}
-                      <div className="w-12 h-12 rounded-xl bg-[#ff4e00]/10 border border-[#ff4e00]/25 flex items-center justify-center group-hover:scale-110 group-hover:bg-[#ff4e00]/20 transition-all duration-300 shadow-sm">
-                        <FeatureIcon name={feature.iconName} className="w-6 h-6 text-[#ff4e00] group-hover:text-amber-400 transition-colors" />
+                      <div className="w-12 h-12 rounded-xl bg-[#151A29] border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:border-[#FF5722]/40 transition-all duration-300 shadow-sm">
+                        <FeatureIcon name={feature.iconName} className="w-6 h-6 text-[#FF5722]" />
                       </div>
 
                       {/* Main Title */}
-                      <h3 className="text-base font-bold font-display tracking-wide uppercase text-gray-100 group-hover:text-orange-400 transition-colors">
+                      <h3 className="text-base font-bold font-display tracking-wide uppercase text-white group-hover:text-[#FF5722] transition-colors">
                         {feature.title}
                       </h3>
 
                       {/* Description content */}
-                      <p className="text-xs text-gray-400 leading-relaxed font-sans">
+                      <p className="text-xs text-gray-300 leading-relaxed font-sans">
                         {feature.description}
                       </p>
                     </div>
 
                     {/* Simple aesthetic indicator corner */}
-                    <div className="pt-4 flex items-center justify-start text-[10px] text-gray-600 font-mono tracking-wider font-extrabold uppercase pointer-events-none group-hover:text-orange-500/40 transition-colors">
+                    <div className="pt-4 flex items-center justify-start text-[10px] text-[#22D3EE] font-mono tracking-wider font-extrabold uppercase pointer-events-none opacity-80">
                       VERIFIED SYSTEM
                     </div>
                   </motion.div>
@@ -627,106 +771,112 @@ export default function App() {
           </section>
 
           {/* Section 3: Download APK Section */}
-          <section id="download" className="py-20 md:py-28 bg-[#030305] relative overflow-hidden">
+          <section id="download-section" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative overflow-hidden">
             {/* Visual background decorations */}
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
-            <div className="absolute top-[20%] left-[-15%] w-[450px] h-[450px] rounded-full bg-[#ff4e00]/10 blur-[130px]" />
-            <div className="absolute bottom-[2%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[#ec1c24]/10 blur-[130px]" />
+            <div className="absolute top-[20%] left-[-15%] w-[450px] h-[450px] rounded-full bg-[#FF5722]/10 blur-[130px]" />
+            <div className="absolute bottom-[2%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[#22D3EE]/10 blur-[130px]" />
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
                 {/* Download Info details left columns */}
                 <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-                  <div className="inline-flex items-center space-x-1.5 bg-[#ff4e00]/10 border border-white/5 text-orange-400 text-xs font-bold uppercase py-1 px-3.5 rounded-full tracking-wider font-mono">
-                    <Smartphone className="w-3.5 h-3.5" />
-                    <span>Get APK Installer</span>
+                  <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1 px-3.5 rounded-full tracking-wider font-mono">
+                    <Smartphone className="w-3.5 h-3.5 text-[#22D3EE]" />
+                    <span>Get APK Installer • Every Match Matters</span>
                   </div>
 
-                  <h2 className="text-3xl sm:text-4xl font-extrabold font-display uppercase tracking-tight">
+                  <h2 className="text-3xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white">
                     Download Latest{" "}
-                    <span className="bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] bg-clip-text text-transparent block md:inline">
+                    <span className="text-[#FF5722]">
                       Fire Clash BD
                     </span>{" "}
                     APK
                   </h2>
 
-                  <p className="text-sm text-gray-400 leading-relaxed font-sans max-w-lg">
-                    Access Bangladesh's fastest growing esports lobby room system instantly on your Android phone frame. Compete, monitor secure payouts, and join rooms directly with simple key triggers.
+                  <p className="text-sm text-gray-300 leading-relaxed font-sans max-w-lg">
+                    Access Bangladesh's fastest growing esports lobby room platform instantly on your Android phone. Compete, monitor verified payouts, and join matches with zero delays.
                   </p>
 
                   {/* Warning Statement box */}
-                  <div className="bg-[#120707]/90 border border-red-500/10 p-4 rounded-xl flex items-start gap-3 max-w-lg">
-                    <Shield className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+                  <div className="bg-[#111521] border border-[#22C55E]/20 p-4 rounded-xl flex items-start gap-3 max-w-lg shadow-lg">
+                    <Shield className="w-5 h-5 text-[#22C55E] shrink-0 mt-0.5" />
                     <div className="text-left">
-                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-green-400 font-display">
+                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-[#22C55E] font-display">
                         Official Release Security check
                       </h4>
-                      <p className="text-[11px] text-gray-400 leading-relaxed font-mono mt-1">
-                        Only download APK files from the official <strong>Fire Clash BD</strong> website (this web platform). Standard copycats may distribute files containing dangerous adware frameworks.
+                      <p className="text-[11px] text-gray-300 leading-relaxed font-mono mt-1">
+                        Only download APK files from the official <strong>Fire Clash BD</strong> platform. Standard copycats may distribute files containing dangerous adware frameworks.
                       </p>
                     </div>
                   </div>
 
                   {/* Android technical specs cards */}
                   <div className="grid grid-cols-3 gap-3 max-w-lg font-mono">
-                    <div className="bg-slate-950/70 border border-white/5 p-3 rounded-xl text-center">
-                      <p className="text-[8px] uppercase text-gray-500 tracking-wider">APK Version</p>
-                      <p className="text-xs font-bold text-orange-400 mt-1">{AppMetaData.apkVersion}</p>
+                    <div className="bg-[#151A29] border border-white/5 p-3 rounded-xl text-center shadow-md">
+                      <p className="text-[8px] uppercase text-gray-400 tracking-wider">APK Version</p>
+                      <p className="text-xs font-bold text-[#22D3EE] mt-1">{AppMetaData.apkVersion}</p>
                     </div>
-                    <div className="bg-slate-950/70 border border-white/5 p-3 rounded-xl text-center">
-                      <p className="text-[8px] uppercase text-gray-500 tracking-wider font-sans">File Size</p>
-                      <p className="text-xs font-bold text-orange-400 mt-1">{AppMetaData.fileSize}</p>
+                    <div className="bg-[#151A29] border border-white/5 p-3 rounded-xl text-center shadow-md">
+                      <p className="text-[8px] uppercase text-gray-400 tracking-wider font-sans">File Size</p>
+                      <p className="text-xs font-bold text-[#22D3EE] mt-1">{AppMetaData.fileSize}</p>
                     </div>
-                    <div className="bg-slate-950/70 border border-white/5 p-3 rounded-xl text-center">
-                      <p className="text-[8px] uppercase text-gray-500 tracking-wider">Android OS</p>
-                      <p className="text-xs font-bold text-orange-400 mt-1">{AppMetaData.androidOs}</p>
+                    <div className="bg-[#151A29] border border-white/5 p-3 rounded-xl text-center shadow-md">
+                      <p className="text-[8px] uppercase text-gray-400 tracking-wider">Android OS</p>
+                      <p className="text-xs font-bold text-[#22D3EE] mt-1">{AppMetaData.androidOs}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Right Interactive download triggers column */}
                 <div className="lg:col-span-6 flex justify-center">
-                  <div className="w-full max-w-md bg-[#08080a] border border-white/5 p-6 md:p-8 rounded-2xl relative shadow-xl shadow-orange-600/5 hover:border-[#ff4e00]/15 transition-all duration-300">
-                    <span className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] rounded-t-2xl" />
+                  <div className="w-full max-w-md bg-[#111521] border border-white/10 p-6 md:p-8 rounded-2xl relative shadow-2xl hover:border-[#FF5722]/30 transition-all duration-300">
+                    <span className="absolute top-0 inset-x-0 h-[2px] bg-[#FF5722] rounded-t-2xl" />
 
                     {!isDownloading ? (
                       <div className="space-y-6 text-center">
-                        <div className="w-16 h-16 rounded-full bg-[#ff4e00]/10 border border-[#ff4e00]/25 flex items-center justify-center mx-auto shadow-inner">
-                          <Download className="w-8 h-8 text-[#ff4e00]" />
+                        <div className="w-16 h-16 rounded-full bg-[#151A29] border border-white/10 flex items-center justify-center mx-auto shadow-inner text-[#FF5722]">
+                          <Download className="w-8 h-8 text-[#FF5722]" />
                         </div>
 
                         <div className="space-y-1">
-                          <h3 className="text-lg font-bold font-display uppercase tracking-wide">Production Installer Pack</h3>
-                          <p className="text-xs text-gray-400 font-sans">
+                          <h3 className="text-lg font-bold font-display uppercase tracking-wide text-white">Production Installer Pack</h3>
+                          <p className="text-xs text-gray-300 font-sans">
                             Clean package architecture. Fully compliant with Google Play Protect guidelines.
                           </p>
                         </div>
 
                         <button
+                          id="download"
+                          type="button"
                           onClick={triggerDownloadSimulation}
-                          className="w-full py-4 bg-gradient-to-r from-[#ff4e00] via-[#ff6525] to-[#ec1c24] hover:from-[#ff621e] hover:to-[#f03138] text-white font-display text-sm font-black uppercase tracking-wider rounded-xl shadow-lg shadow-[#ff4e00]/15 hover:shadow-[#ff4e00]/30 border border-white/5 transition-all duration-300 cursor-pointer active:scale-95"
+                          className={`w-full py-4 bg-[#FF5722] hover:bg-[#F4511E] text-white font-display text-sm font-black uppercase tracking-wider rounded-xl shadow-lg shadow-[#FF5722]/25 hover:shadow-[#FF5722]/40 border border-white/10 transition-all duration-300 cursor-pointer active:scale-95 scroll-mt-32 ${
+                            downloadButtonHighlight
+                              ? "ring-4 ring-[#FF5722] ring-offset-2 ring-offset-[#111521] shadow-[#FF5722]/60 scale-[1.02]"
+                              : ""
+                          }`}
                         >
                           Download Fire Clash BD APK
                         </button>
 
-                        <div className="pt-2 flex justify-center items-center gap-4 text-[10px] text-gray-500 font-mono">
-                          <span className="flex items-center gap-1">✔ Safe Certificate</span>
+                        <div className="pt-2 flex justify-center items-center gap-4 text-[10px] text-gray-400 font-mono">
+                          <span className="flex items-center gap-1 text-[#22C55E]">✔ Safe Certificate</span>
                           <span className="text-gray-700">|</span>
-                          <span className="flex items-center gap-1">✔ SHA256 Checked</span>
+                          <span className="flex items-center gap-1 text-[#22C55E]">✔ SHA256 Checked</span>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-6 text-left">
                         <div className="flex justify-between items-center text-xs font-mono">
-                          <span className="text-gray-400 font-semibold">{downloadFinished ? "File ready to install!" : "Transferring official download parcel..."}</span>
-                          <span className="text-[#ff4e00] font-bold">{downloadProgress}%</span>
+                          <span className="text-gray-300 font-semibold">{downloadFinished ? "File ready to install!" : "Transferring official download parcel..."}</span>
+                          <span className="text-[#FF5722] font-bold">{downloadProgress}%</span>
                         </div>
 
                         {/* Animated slider status */}
-                        <div className="h-[6px] bg-[#030305] border border-white/5 rounded-full w-full overflow-hidden">
+                        <div className="h-[6px] bg-[#151A29] border border-white/5 rounded-full w-full overflow-hidden">
                           <motion.div
-                            className="h-full bg-gradient-to-r from-[#ff4e00] via-[#ff6525] to-[#ec1c24]"
+                            className="h-full bg-[#FF5722]"
                             style={{ width: `${downloadProgress}%` }}
                           />
                         </div>
@@ -737,17 +887,17 @@ export default function App() {
                             <motion.div
                               initial={{ opacity: 0, scale: 0.95 }}
                               animate={{ opacity: 1, scale: 1 }}
-                              className="bg-[#030305]/80 border border-[#ff4e00]/25 p-4 rounded-xl space-y-3 font-sans"
+                              className="bg-[#151A29] border border-[#22C55E]/30 p-4 rounded-xl space-y-3 font-sans"
                             >
-                              <div className="flex items-center space-x-2 text-green-400 text-xs font-bold uppercase tracking-wider font-mono">
+                              <div className="flex items-center space-x-2 text-[#22C55E] text-xs font-bold uppercase tracking-wider font-mono">
                                 <CheckCircle2 className="w-4 h-4" />
                                 <span>Download Complete!</span>
                               </div>
-                              <p className="text-[11px] text-gray-400 leading-relaxed font-mono">
+                              <p className="text-[11px] text-gray-300 leading-relaxed font-mono">
                                 <strong>How to install on Android manually:</strong>
                               </p>
 
-                              <ol className="text-[11px] text-gray-400 space-y-2 font-sans list-decimal list-inside pl-1">
+                              <ol className="text-[11px] text-gray-300 space-y-2 font-sans list-decimal list-inside pl-1">
                                 <li>Open your device's <strong>File Manager</strong> or Downloads directory.</li>
                                 <li>Tap on <code>fire_clash_bd.apk</code>.</li>
                                 <li>If prompted, verify that <strong>“Install from Unknown Sources”</strong> is enabled in your browser settings.</li>
@@ -756,9 +906,14 @@ export default function App() {
 
                               <div className="pt-2">
                                 <a
+                                  id="download-direct-btn"
                                   href={AppMetaData.downloadUrl}
                                   download="FireClashBD.apk"
-                                  className="w-full py-3 bg-[#ff4e00] hover:bg-[#ff621e] text-white font-display text-xs font-bold uppercase tracking-widest rounded-lg text-center transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-[#ff4e00]/10"
+                                  className={`w-full py-3 bg-[#FF5722] hover:bg-[#F4511E] text-white font-display text-xs font-bold uppercase tracking-widest rounded-lg text-center transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-[#FF5722]/20 scroll-mt-32 ${
+                                    downloadButtonHighlight
+                                      ? "ring-4 ring-[#FF5722] ring-offset-2 ring-offset-[#111521] shadow-[#FF5722]/60 scale-[1.02]"
+                                      : ""
+                                  }`}
                                 >
                                   <Download className="w-3.5 h-3.5" />
                                   <span>Download APK Directly</span>
@@ -769,12 +924,12 @@ export default function App() {
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
-                              className="bg-[#030305]/40 border border-white/5 p-4 rounded-xl flex items-center gap-3 animate-pulse"
+                              className="bg-[#151A29] border border-white/5 p-4 rounded-xl flex items-center gap-3 animate-pulse"
                             >
-                              <QrCode className="w-10 h-10 text-orange-500/60 shrink-0" />
+                              <QrCode className="w-10 h-10 text-[#22D3EE] shrink-0" />
                               <div>
-                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Security bypass protocol active</h4>
-                                <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed font-mono">
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">Security pipeline active</h4>
+                                <p className="text-[10px] text-gray-400 mt-0.5 leading-relaxed font-mono">
                                   Secure SSL pipeline established. Speed optimized for 3G/4G/WiFi setups in Bangladesh.
                                 </p>
                               </div>
@@ -790,58 +945,58 @@ export default function App() {
           </section>
 
           {/* Section 4: About Section */}
-          <section id="about" className="py-20 md:py-28 bg-[#030305] relative">
+          <section id="about" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
               <div className="space-y-6">
-                <div className="inline-flex items-center space-x-1.5 bg-[#ff4e00]/10 border border-white/5 text-[#ff4e00] text-xs font-bold uppercase py-1 px-3.5 rounded-full tracking-wider font-mono">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Who We Are</span>
+                <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
+                  <Shield className="w-3.5 h-3.5 text-[#22D3EE]" />
+                  <span>Who We Are • Every Match Matters</span>
                 </div>
 
-                <h2 className="text-3xl sm:text-4xl font-extrabold font-display uppercase tracking-tight">
+                <h2 className="text-3xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white">
                   ABOUT{" "}
-                  <span className="bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] bg-clip-text text-transparent">
+                  <span className="text-[#FF5722]">
                     FIRE CLASH BD
                   </span>
                 </h2>
 
-                <p className="text-sm text-gray-400 leading-relaxed font-sans max-w-2xl mx-auto">
-                  Fire Clash BD is a skill-based, high-fidelity Free Fire esports tournament platform custom engineered specifically for Bangladeshi gamers. We offer the chance for players to gather in structured lobbies, test their strategic mechanics, and win real rewards through completely fair gameplay.
+                <p className="text-sm text-gray-300 leading-relaxed font-sans max-w-2xl mx-auto">
+                  <strong className="text-[#22D3EE] font-semibold">Every Match Matters.</strong> Fire Clash BD is a skill-based, high-fidelity Free Fire esports tournament platform custom engineered specifically for Bangladeshi gamers. We offer the chance for players to gather in structured lobbies, test their strategic mechanics, and win real rewards through completely fair gameplay.
                 </p>
 
                 {/* Bullet points detailing standard esports mandate */}
                 <div className="space-y-4 font-sans text-left max-w-xl mx-auto pt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="w-3.5 h-3.5 text-green-400" />
+                  <div className="flex items-start gap-3 bg-[#111521] border border-white/5 p-4 rounded-xl">
+                    <div className="w-6 h-6 rounded-full bg-[#151A29] border border-[#22C55E]/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3.5 h-3.5 text-[#22C55E]" />
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-white">Not a gambling application</h4>
-                      <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed font-sans">
-                        We do not support predictions, luck games, or casino elements. Rewards are won strictly based on your physical placement rank and direct kills.
+                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-[#22C55E]">Not a gambling application</h4>
+                      <p className="text-[11px] text-gray-300 mt-0.5 leading-relaxed font-sans">
+                        We do not support predictions, luck games, or casino elements. Rewards are won strictly based on your in-game placement and verified skill.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#ff4e00]/10 border border-[#ff4e00]/25 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="w-3.5 h-3.5 text-orange-400" />
+                  <div className="flex items-start gap-3 bg-[#111521] border border-white/5 p-4 rounded-xl">
+                    <div className="w-6 h-6 rounded-full bg-[#151A29] border border-[#22D3EE]/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3.5 h-3.5 text-[#22D3EE]" />
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-white font-sans">Hardware Lock Anti-cheat</h4>
-                      <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed font-sans">
-                        Advanced monitor routines prevent emulator scripts, external plugins, or client files tampering, insuring an absolutely fair room.
+                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-[#22D3EE] font-sans">Hardware Lock Anti-cheat</h4>
+                      <p className="text-[11px] text-gray-300 mt-0.5 leading-relaxed font-sans">
+                        Advanced monitor routines prevent emulator scripts, external plugins, or client files tampering, ensuring an absolutely fair room for all squads.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-[#ec1c24]/10 border border-[#ec1c24]/20 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="w-3.5 h-3.5 text-red-400" />
+                  <div className="flex items-start gap-3 bg-[#111521] border border-white/5 p-4 rounded-xl">
+                    <div className="w-6 h-6 rounded-full bg-[#151A29] border border-[#FFB300]/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3.5 h-3.5 text-[#FFB300]" />
                     </div>
                     <div>
-                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-white font-sans">Nagad Instancy</h4>
-                      <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed font-sans">
+                      <h4 className="text-xs uppercase tracking-wider font-extrabold text-[#FFB300] font-sans">Nagad &amp; bKash Instant Payouts</h4>
+                      <p className="text-[11px] text-gray-300 mt-0.5 leading-relaxed font-sans">
                         We integrate secure, direct mobile banking transfers. Instantly deposit manually via auto processing, and receive manual payouts in under 30 minutes!
                       </p>
                     </div>
@@ -852,24 +1007,24 @@ export default function App() {
           </section>
 
           {/* Section 5: Social Media Section */}
-          <section id="social" className="py-20 md:py-28 bg-[#030305] relative">
+          <section id="social" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
 
               {/* Header section blocks */}
               <div className="max-w-2xl mx-auto mb-16 space-y-4">
-                <div className="inline-flex items-center space-x-1.5 bg-[#ff4e00]/10 border border-white/5 text-orange-400 text-[10px] md:text-xs font-bold uppercase py-1 px-3 rounded-full tracking-wider font-mono">
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Esports communities</span>
+                <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-[10px] md:text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
+                  <Share2 className="w-3.5 h-3.5 text-[#22D3EE]" />
+                  <span>Esports communities • Every Match Matters</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black font-display uppercase tracking-tight">
+                <h2 className="text-3xl md:text-4xl font-black font-display uppercase tracking-tight text-white">
                   JOIN OUR{" "}
-                  <span className="bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] bg-clip-text text-transparent">
+                  <span className="text-[#FF5722]">
                     GAMING WORLD
                   </span>
                 </h2>
-                <div className="h-[2px] w-20 bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] mx-auto rounded-full" />
-                <p className="text-sm text-gray-500 font-sans">
-                  Keep in touch with official room hosts, participate in seasonal giveaways, and communicate directly with active squads via social structures.
+                <div className="h-[2px] w-20 bg-[#FF5722] mx-auto rounded-full" />
+                <p className="text-sm text-gray-300 font-sans">
+                  Keep in touch with official room hosts, participate in seasonal scrims, and communicate directly with active squads.
                 </p>
               </div>
 
@@ -884,11 +1039,6 @@ export default function App() {
                       <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.62 4.19 1.11 1.25 2.63 2.05 4.25 2.37v3.83c-1.39-.07-2.76-.55-3.92-1.34-.84-.58-1.53-1.37-2.02-2.27V15c.03 1.9-.53 3.79-1.63 5.31C13.53 22.01 11.53 23 9.4 23c-2.48.06-4.9-1.07-6.3-3.11-1.35-1.95-1.6-4.52-.67-6.72 1-2.33 3.25-3.97 5.79-4.14V13c-1.29.13-2.46.91-2.99 2.09-.59 1.29-.39 2.87.52 3.97C6.72 20.25 8 20.85 9.4 20.8c1.35.05 2.66-.67 3.29-1.87.35-.7.49-1.49.46-2.28V.02h-.63z" />
                     </svg>
                   );
-                  else if (social.platform === "Discord") SocialIcon = ({ className }) => (
-                    <svg className={`${className} fill-current`} viewBox="0 0 127.14 96.36">
-                      <path d="M107.7,8.07A105.15,105.15,0,0,0,77.26,0a77.19,77.19,0,0,0-3.3,6.83A96.67,96.67,0,0,0,53.22,6.83,77.19,77.19,0,0,0,49.88,0,105.15,105.15,0,0,0,19.44,8.07C3.66,31.58-1.86,54.65,1,77.53A105.73,105.73,0,0,0,32,96.36a77.7,77.7,0,0,0,6.63-10.85,68.43,68.43,0,0,1-10.4-5c.87-.64,1.72-1.31,2.53-2a75.1,75.1,0,0,0,72.6,0c.81.69,1.66,1.36,2.53,2a68.43,68.43,0,0,1-10.4,5,77.7,77.7,0,0,0,6.63,10.85,105.73,105.73,0,0,0,31.06-18.83C129.87,48.12,123.63,25.37,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5.14-12.64,11.41-12.64S53.9,46,53.9,53,48.72,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.24,60,73.24,53s5.14-12.64,11.45-12.64S96.14,46,96.14,53,91,65.69,84.69,65.69Z" />
-                    </svg>
-                  );
 
                   return (
                     <motion.a
@@ -896,21 +1046,21 @@ export default function App() {
                       href={social.url}
                       target="_blank"
                       rel="noreferrer"
-                      whileHover={{ scale: 1.03 }}
-                      className={`block bg-gradient-to-tr border border-white/5 p-6 rounded-2xl shadow-md transition-all duration-300 group hover:border-[#ff4e00]/25 hover:shadow-lg ${social.color} ${social.glowColor} cursor-pointer`}
+                      whileHover={{ scale: 1.02, y: -4 }}
+                      className="block bg-[#111521] border border-white/10 hover:border-[#FF5722]/50 p-6 rounded-2xl shadow-xl transition-all duration-300 group cursor-pointer"
                     >
                       <div className="flex flex-col h-full justify-between space-y-4">
-                        <div className="w-10 h-10 rounded-xl bg-slate-950 flex items-center justify-center transition-all group-hover:scale-110">
-                          <SocialIcon className="w-5 h-5 text-gray-300 group-hover:text-amber-400 transition-colors" />
+                        <div className="w-10 h-10 rounded-xl bg-[#151A29] border border-white/5 flex items-center justify-center transition-all group-hover:scale-110">
+                          <SocialIcon className="w-5 h-5 text-[#FF5722] group-hover:text-white transition-colors" />
                         </div>
 
                         <div>
-                          <h4 className="text-xs font-mono text-[#ff4e00] uppercase font-black">{social.platform}</h4>
-                          <h3 className="text-sm font-bold font-display uppercase text-white mt-1 group-hover:text-white transition-colors">{social.label}</h3>
+                          <h4 className="text-xs font-mono text-[#FF5722] uppercase font-black">{social.platform}</h4>
+                          <h3 className="text-sm font-bold font-display uppercase text-white mt-1 group-hover:text-[#FF5722] transition-colors">{social.label}</h3>
                           <p className="text-[10px] text-gray-400 mt-1 font-sans leading-relaxed">{social.sub}</p>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-[9px] text-[#ff4e00] font-mono tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1.5 text-[9px] text-[#22D3EE] font-mono tracking-widest uppercase font-semibold">
                           <span>Join Hub</span>
                           <ExternalLink className="w-3 h-3" />
                         </div>
@@ -923,44 +1073,45 @@ export default function App() {
           </section>
 
           {/* Section 6: Privacy Policy with expandable accordion */}
-          <section id="policy" className="py-20 md:py-28 bg-[#030305] relative">
+          <section id="policy" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
               {/* Header layout */}
               <div className="text-center mb-12 space-y-3">
-                <div className="inline-flex items-center space-x-1.5 bg-[#ff4e00]/10 border border-white/5 text-orange-400 text-xs font-bold uppercase py-1 px-3.5 rounded-full tracking-wider font-mono">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Fair Play Commitment</span>
+                <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#22D3EE]" />
+                  <span>Fair Play Commitment • Every Match Matters</span>
                 </div>
-                <h2 className="text-3xl font-black font-display uppercase">
-                  POLICIES &{" "}
-                  <span className="bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] bg-clip-text text-transparent">
+                <h2 className="text-3xl font-black font-display uppercase text-white">
+                  POLICIES &amp;{" "}
+                  <span className="text-[#FF5722]">
                     RULES FOR GAMEPLAY
                   </span>
                 </h2>
-                <p className="text-sm text-gray-500 font-sans max-w-xl mx-auto">
+                <p className="text-sm text-gray-300 font-sans max-w-xl mx-auto">
                   Every participant is bound by legal policies ensuring honesty, data protection, and anti-fraud systems. Expand to review fully.
                 </p>
               </div>
 
               {/* Accordion List */}
-              <div className="border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5 bg-[#08080a] shadow-xl">
+              <div className="border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/10 bg-[#111521] shadow-2xl">
                 {PolicyList.map((policy) => {
                   const isExpanded = expandedPolicyId === policy.id;
                   return (
                     <div key={policy.id} className="transition-all">
                       <button
+                        type="button"
                         onClick={() => setExpandedPolicyId(isExpanded ? null : policy.id)}
-                        className="w-full flex justify-between items-center px-6 py-5 hover:bg-white/[0.01] transition-all text-left font-display uppercase text-xs tracking-wider font-extrabold text-gray-200 hover:text-[#ff4e00] cursor-pointer"
+                        className="w-full flex justify-between items-center px-6 py-5 hover:bg-[#151A29]/50 transition-all text-left font-display uppercase text-xs tracking-wider font-extrabold text-gray-200 hover:text-[#FF5722] cursor-pointer"
                       >
                         <span className="flex items-center gap-3">
-                          <span className={`w-1.5 h-1.5 rounded-full ${isExpanded ? "bg-[#ff4e00]" : "bg-gray-655"}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full ${isExpanded ? "bg-[#FF5722]" : "bg-gray-600"}`} />
                           {policy.title}
                         </span>
                         {isExpanded ? (
-                          <ChevronUp className="w-5 h-5 text-[#ff4e00] shrink-0" />
+                          <ChevronUp className="w-5 h-5 text-[#FF5722] shrink-0" />
                         ) : (
-                          <ChevronDown className="w-5 h-5 text-gray-500 shrink-0" />
+                          <ChevronDown className="w-5 h-5 text-gray-400 shrink-0" />
                         )}
                       </button>
 
@@ -972,8 +1123,8 @@ export default function App() {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="px-6 pb-6 pt-1 text-slate-400 leading-relaxed font-sans text-xs bg-[#050508]">
-                              <div className="border-l border-[#ff4e00]/25 pl-4 py-2 mt-1 italic">
+                            <div className="px-6 pb-6 pt-1 text-gray-300 leading-relaxed font-sans text-xs bg-[#151A29]">
+                              <div className="border-l-2 border-[#FF5722] pl-4 py-2 mt-1">
                                 {policy.content}
                               </div>
                             </div>
@@ -986,11 +1137,11 @@ export default function App() {
               </div>
 
               {/* Read Full policy Expandable Footer notice */}
-              <div className="mt-8 text-center bg-[#08080a] border border-white/5 p-4 rounded-xl">
-                <p className="text-[11px] text-gray-400 font-mono">
+              <div className="mt-8 text-center bg-[#111521] border border-white/10 p-4 rounded-xl">
+                <p className="text-[11px] text-gray-300 font-mono">
                   By registering or downloading the Fire Clash BD APK package manually, you immediately signify that you have fully agreed to hold compliance with our
-                  <strong className="text-[#ff4e00] hover:underline cursor-pointer ml-1">Terms of Service</strong> &amp;
-                  <strong className="text-[#ff4e00] hover:underline cursor-pointer ml-1">User Privacy System</strong>.
+                  <strong className="text-[#FF5722] hover:underline cursor-pointer ml-1">Terms of Service</strong> &amp;
+                  <strong className="text-[#FF5722] hover:underline cursor-pointer ml-1">User Privacy System</strong>.
                 </p>
               </div>
 
@@ -998,81 +1149,98 @@ export default function App() {
           </section>
 
           {/* Page Footer */}
-          <footer className="bg-[#030305] border-t border-white/5 relative z-10 py-12 font-sans">
+          <footer className="bg-[#0B0F17] border-t border-white/10 relative z-10 py-12 font-sans">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 {/* Brand description footer */}
                 <div className="space-y-4 text-center md:text-left">
-                  <a href="#hero" className="flex items-center space-x-2 justify-center md:justify-start">
+                  <a href="#hero" onClick={(e) => scrollToSection(e, "hero")} className="flex items-center space-x-2 justify-center md:justify-start cursor-pointer">
                     <img
                       src={appIcon}
                       alt="Fire Clash BD Logo"
                       className="w-8 h-8 rounded-lg object-cover"
                       referrerPolicy="no-referrer"
                     />
-                    <span className="text-base font-black font-display tracking-widest bg-gradient-to-r from-[#ff4e00] to-[#ec1c24] bg-clip-text text-transparent">FIRE CLASH BD</span>
+                    <span className="text-base font-black font-display tracking-widest text-white">FIRE CLASH BD</span>
                   </a>
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto md:mx-0">
-                    Bangladesh's premier skill-based esports app, designed natively for Android and built for professional Free Fire fighters ready to compete safely.
+                  <p className="text-xs text-[#22D3EE] font-mono font-bold tracking-wider">
+                    Every Match Matters.
                   </p>
-                  <p className="text-[10px] text-slate-600 font-mono">
+                  <p className="text-xs text-gray-400 leading-relaxed max-w-sm mx-auto md:mx-0">
+                    Bangladesh's premier skill-based esports app, designed natively for Android and built for competitive Free Fire warriors.
+                  </p>
+                  <p className="text-[10px] text-gray-500 font-mono">
                     Official Contact Email: <br />
-                    <span className="text-slate-400">fireclashbd@gmail.com</span>
+                    <span className="text-[#22D3EE]">fireclashbd@gmail.com</span>
                   </p>
                 </div>
 
                 {/* Quick Navigation footer */}
                 <div className="text-center md:text-left">
-                  <h4 className="text-xs font-display font-extrabold uppercase tracking-widest text-[#ff4e00] mb-4">Quick Navigation</h4>
-                  <ul className="text-xs text-slate-400 space-y-2.5 font-semibold">
-                    <li><a href="#hero" className="hover:text-[#ff4e00] transition-colors">Home Landing</a></li>
-                    <li><a href="#features" className="hover:text-[#ff4e00] transition-colors">Core Features</a></li>
-                    <li><a href="#download" className="hover:text-[#ff4e00] transition-colors">Download Installer</a></li>
-                    <li><a href="#about" className="hover:text-[#ff4e00] transition-colors">About esports platform</a></li>
+                  <h4 className="text-xs font-display font-extrabold uppercase tracking-widest text-[#FF5722] mb-4">Quick Navigation</h4>
+                  <ul className="text-xs text-gray-300 space-y-2.5 font-semibold">
+                    <li><a href="#hero" onClick={(e) => scrollToSection(e, "hero")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Home Landing</a></li>
+                    <li><a href="#features" onClick={(e) => scrollToSection(e, "features")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Core Features</a></li>
+                    <li><a href="#download" onClick={(e) => scrollToSection(e, "download")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Download Installer</a></li>
+                    <li><a href="#about" onClick={(e) => scrollToSection(e, "about")} className="hover:text-[#FF5722] transition-colors cursor-pointer">About esports platform</a></li>
                   </ul>
                 </div>
 
                 {/* Rules & legal footer links */}
                 <div className="text-center md:text-left">
-                  <h4 className="text-xs font-display font-extrabold uppercase tracking-widest text-[#ff4e00] mb-4">Legal & Rules</h4>
-                  <ul className="text-xs text-slate-400 space-y-2.5 font-semibold">
-                    <li><a href="#policy" className="hover:text-[#ff4e00] transition-colors">Privacy and data</a></li>
-                    <li><a href="#policy" className="hover:text-[#ff4e00] transition-colors">Fair play rules</a></li>
-                    <li><a href="#policy" className="hover:text-[#ff4e00] transition-colors">No gambling mandate</a></li>
-                    <li><a href="#policy" className="hover:text-[#ff4e00] transition-colors">Account ban guidelines</a></li>
+                  <h4 className="text-xs font-display font-extrabold uppercase tracking-widest text-[#FF5722] mb-4">Legal &amp; Rules</h4>
+                  <ul className="text-xs text-gray-300 space-y-2.5 font-semibold">
+                    <li><a href="#policy" onClick={(e) => scrollToSection(e, "policy")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Privacy and data</a></li>
+                    <li><a href="#policy" onClick={(e) => scrollToSection(e, "policy")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Fair play rules</a></li>
+                    <li><a href="#policy" onClick={(e) => scrollToSection(e, "policy")} className="hover:text-[#FF5722] transition-colors cursor-pointer">No gambling mandate</a></li>
+                    <li><a href="#policy" onClick={(e) => scrollToSection(e, "policy")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Account ban guidelines</a></li>
                   </ul>
                 </div>
 
                 {/* Social media links summary footers */}
                 <div className="text-center md:text-left space-y-4">
-                  <h4 className="text-xs font-display font-extrabold uppercase tracking-widest text-[#ff4e00] mb-4">Official Channels</h4>
+                  <h4 className="text-xs font-display font-extrabold uppercase tracking-widest text-[#FF5722] mb-4">Official Channels</h4>
                   <div className="flex justify-center md:justify-start items-center gap-3">
                     <a
-                      href="https://youtube.com"
+                      href="https://www.youtube.com/@fire_clash_bd"
                       target="_blank"
                       rel="noreferrer"
-                      className="w-9 h-9 flex items-center justify-center border border-white/5 hover:border-[#ff4e00]/30 bg-white/[0.02] hover:bg-[#ff4e00]/5 rounded-lg transition-all cursor-pointer"
+                      className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-[#FF5722]/50 bg-[#151A29] hover:bg-[#151A29]/80 rounded-xl transition-all cursor-pointer"
                       title="YouTube"
                     >
-                      <Youtube className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                      <Youtube className="w-5 h-5 text-[#EF4444]" />
+                    </a>
+                    <a
+                      href="https://www.tiktok.com/@fire_clash_bd"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-10 h-10 flex items-center justify-center border border-white/10 hover:border-[#FF5722]/50 bg-[#151A29] hover:bg-[#151A29]/80 rounded-xl transition-all cursor-pointer"
+                      title="TikTok"
+                    >
+                      <svg
+                        className="w-4 h-4 fill-current text-white hover:text-[#FF5722] transition-colors"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.02 1.62 4.19 1.11 1.25 2.63 2.05 4.25 2.37v3.83c-1.39-.07-2.76-.55-3.92-1.34-.84-.58-1.53-1.37-2.02-2.27V15c.03 1.9-.53 3.79-1.63 5.31C13.53 22.01 11.53 23 9.4 23c-2.48.06-4.9-1.07-6.3-3.11-1.35-1.95-1.6-4.52-.67-6.72 1-2.33 3.25-3.97 5.79-4.14V13c-1.29.13-2.46.91-2.99 2.09-.59 1.29-.39 2.87.52 3.97C6.72 20.25 8 20.85 9.4 20.8c1.35.05 2.66-.67 3.29-1.87.35-.7.49-1.49.46-2.28V.02h-.63z" />
+                      </svg>
                     </a>
                   </div>
-                  <p className="text-[10px] text-gray-600">
-                    Not affiliated with or endorsed by Garena Free Fire. All intellectual trademarks belong properties to respective official firms.
+                  <p className="text-[10px] text-gray-500">
+                    Not affiliated with or endorsed by Garena Free Fire. All intellectual trademarks belong to their respective owners.
                   </p>
                 </div>
               </div>
 
               {/* Horizontal line divider */}
-              <div className="border-t border-white/5 my-8 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-slate-500 text-[10px] uppercase font-mono tracking-wider">
-                <p>&copy; {new Date().getFullYear()} Fire Clash BD. All Rights Reserved.</p>
+              <div className="border-t border-white/10 my-8 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-400 text-[10px] uppercase font-mono tracking-wider">
+                <p>&copy; {new Date().getFullYear()} Fire Clash BD. Every Match Matters. All Rights Reserved.</p>
                 <div className="flex gap-4">
-                  <span className="hover:text-[#ff4e00] cursor-pointer">Terms</span>
+                  <span className="hover:text-[#FF5722] cursor-pointer">Terms</span>
                   <span>&bull;</span>
-                  <span className="hover:text-[#ff4e00] cursor-pointer">Security Certs</span>
+                  <span className="hover:text-[#FF5722] cursor-pointer">Security Certs</span>
                   <span>&bull;</span>
-                  <span className="hover:text-[#ff4e00] cursor-pointer">Sitemap</span>
+                  <span className="hover:text-[#FF5722] cursor-pointer">Sitemap</span>
                 </div>
               </div>
 

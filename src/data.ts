@@ -130,8 +130,8 @@ export const SocialMediaList = [
     name: "YouTube Channel",
     platform: "YouTube",
     url: "https://www.youtube.com/@fire_clash_bd",
-    color: "from-[#000000]/40 to-[#991b1b]/20 hover:from-[#000000] hover:to-[#991b1b]/40",
-    glowColor: "shadow-[#991b1b]/10 hover:shadow-[#991b1b]/40",
+    color: "from-[#000000]/40 to-[#EF4444]/20 hover:from-[#000000] hover:to-[#EF4444]/40",
+    glowColor: "shadow-[#EF4444]/10 hover:shadow-[#EF4444]/40",
     label: "@fire_clash_bd",
     sub: "Watch match highlights, top plays, and daily streams"
   },
@@ -139,14 +139,15 @@ export const SocialMediaList = [
     name: "TikTok Account",
     platform: "TikTok",
     url: "https://www.tiktok.com/@fire_clash_bd",
-    color: "from-[#000000]/40 to-[#00f2fe]/20 hover:from-[#000000] hover:to-[#00f2fe]/40",
-    glowColor: "shadow-[#00f2fe]/20 hover:shadow-[#00f2fe]/50",
+    color: "from-[#000000]/40 to-[#22D3EE]/20 hover:from-[#000000] hover:to-[#22D3EE]/40",
+    glowColor: "shadow-[#22D3EE]/20 hover:shadow-[#22D3EE]/50",
     label: "@fire_clash_bd",
     sub: "Trendy shorts, competitive updates, and funny clips"
   },
 ];
 
 export interface AppSpecs {
+  tagline: string;
   apkVersion: string;
   fileSize: string;
   androidOs: string;
@@ -158,11 +159,12 @@ export interface AppSpecs {
 
 // EDITABLE SPECIFICATIONS FOR THE MOBILE APP
 export const AppMetaData: AppSpecs = {
-  apkVersion: "v2.0.0",
+  tagline: "Every Match Matters.",
+  apkVersion: "v2.1.0",
   fileSize: "~28MB",
   androidOs: "8.0+",
   activeGamers: "46+",
-  totalPricePaid: "৳5000+",
+  totalPricePaid: "৳5K+",
   tournamentsDone: "120+",
   downloadUrl: "https://github.com/fireclashbd/fireclashbd.github.io/releases/latest/download/fire_clash_bd.apk"
 };
