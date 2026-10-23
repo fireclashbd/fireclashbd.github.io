@@ -32,7 +32,9 @@ import {
   Target,
   QrCode,
   CheckCircle2,
-  ListFilter
+  ListFilter,
+  HelpCircle,
+  Send
 } from "lucide-react";
 
 import appIcon from "./icon.png";
@@ -41,7 +43,8 @@ import {
   FeaturesList,
   PolicyList,
   SocialMediaList,
-  AppMetaData
+  AppMetaData,
+  FaqList
 } from "./data";
 
 // Type definitions & Icons mapping helper
@@ -85,8 +88,9 @@ export default function App() {
   const [downloadFinished, setDownloadFinished] = useState(false);
   const [downloadButtonHighlight, setDownloadButtonHighlight] = useState(false);
 
-  // Policy Accordions expanded state
+  // Policy & FAQ Accordions expanded state
   const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>("user-data");
+  const [expandedFaqId, setExpandedFaqId] = useState<string | null>("what-is-fire-clash-bd");
 
   // Load screen counter simulation
   useEffect(() => {
@@ -218,6 +222,7 @@ export default function App() {
             { spyId: "features", navId: "features" },
             { spyId: "download-section", navId: "download" },
             { spyId: "about", navId: "about" },
+            { spyId: "faq", navId: "faq" },
             { spyId: "social", navId: "social" },
             { spyId: "policy", navId: "policy" }
           ];
@@ -430,6 +435,7 @@ export default function App() {
                   { id: "features", label: "Features" },
                   { id: "download", label: "Download APK" },
                   { id: "about", label: "About" },
+                  { id: "faq", label: "FAQ" },
                   { id: "social", label: "Socials" },
                   { id: "policy", label: "Rules & Policy" }
                 ].map((item) => (
@@ -546,6 +552,7 @@ export default function App() {
                       { id: "features", label: "Features", icon: Sparkles },
                       { id: "download", label: "Download APK", icon: Download },
                       { id: "about", label: "About", icon: Shield },
+                      { id: "faq", label: "FAQ", icon: HelpCircle },
                       { id: "social", label: "Socials", icon: Share2 },
                       { id: "policy", label: "Rules & Policy", icon: ShieldCheck }
                     ].map((item) => {
@@ -631,7 +638,7 @@ export default function App() {
 
                 {/* Description Paragraph */}
                 <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed font-sans">
-                  <strong className="text-[#22D3EE] font-semibold">Every Match Matters.</strong> Join professional scrims, compete in structured lobbies, secure instant rewards, and transfer your winnings directly into cash. Your raw combat skill is the only key to gaming fortune.
+                  <strong className="text-[#22D3EE] font-semibold">Fire Clash BD</strong> is a Free Fire tournament app in Bangladesh featuring Solo Tour, Lone Wolf, Loss To Win and SQUAD ESPORTS matches. download the app to join and play tournaments.
                 </p>
 
                 {/* Statistics block showing scale of operations */}
@@ -990,7 +997,152 @@ export default function App() {
             </div>
           </section>
 
-          {/* Section 5: Social Media Section */}
+          {/* Section 5: FAQ Section */}
+          <section id="faq" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              {/* Header layout */}
+              <div className="text-center mb-12 space-y-3">
+                <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
+                  <HelpCircle className="w-3.5 h-3.5 text-[#22D3EE]" />
+                  <span>Frequently Asked Questions • Trust &amp; Transparency</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black font-display uppercase text-white tracking-tight">
+                  FREQUENTLY ASKED{" "}
+                  <span className="text-[#FF5722]">
+                    QUESTIONS
+                  </span>
+                </h2>
+                <div className="h-[2px] w-20 bg-[#FF5722] mx-auto rounded-full" />
+                <p className="text-sm text-gray-300 font-sans max-w-xl mx-auto">
+                  Get clear, verified answers about Fire Clash BD tournaments, fair play standards, Telegram community feedback, and prize distribution.
+                </p>
+              </div>
+
+              {/* Accordion FAQ List */}
+              <div className="space-y-3.5">
+                {FaqList.map((faq) => {
+                  const isExpanded = expandedFaqId === faq.id;
+                  return (
+                    <div
+                      key={faq.id}
+                      className="bg-[#111521] border border-white/10 hover:border-[#FF5722]/40 rounded-2xl overflow-hidden transition-all duration-200 shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFaqId(isExpanded ? null : faq.id)}
+                        className="w-full flex items-center justify-between p-5 md:p-6 text-left cursor-pointer group"
+                        aria-expanded={isExpanded}
+                      >
+                        <div className="flex items-start md:items-center gap-3.5 pr-4">
+                          <span
+                            className={`w-2 h-2 rounded-full mt-1.5 md:mt-0 shrink-0 transition-colors ${
+                              isExpanded ? "bg-[#FF5722] shadow-[0_0_8px_#FF5722]" : "bg-gray-600 group-hover:bg-[#FF5722]/70"
+                            }`}
+                          />
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              {faq.badge && (
+                                <span className="text-[10px] text-[#22D3EE] font-mono font-bold uppercase bg-[#151A29] border border-[#22D3EE]/20 px-2 py-0.5 rounded-md">
+                                  {faq.badge}
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="font-display font-extrabold text-sm md:text-base text-white group-hover:text-[#FF5722] transition-colors leading-snug">
+                              {faq.question}
+                            </h3>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`w-8 h-8 rounded-xl bg-[#151A29] border border-white/5 flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                            isExpanded ? "rotate-180 bg-[#FF5722]/10 border-[#FF5722]/30" : ""
+                          }`}
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 transition-colors ${
+                              isExpanded ? "text-[#FF5722]" : "text-gray-400 group-hover:text-white"
+                            }`}
+                          />
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-5 md:px-6 pb-6 pt-1 text-gray-300 font-sans text-xs md:text-sm leading-relaxed border-t border-white/5 bg-[#151A29]/40">
+                              <div className="space-y-3 pt-3">
+                                {faq.answer.split("\n\n").map((paragraph, idx) => (
+                                  <p key={idx} className="text-gray-300">
+                                    {paragraph}
+                                  </p>
+                                ))}
+
+                                {faq.highlightLink && (
+                                  <div className="mt-4 p-4 rounded-xl bg-[#151A29] border border-[#22D3EE]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-xl bg-[#22D3EE]/10 border border-[#22D3EE]/20 flex items-center justify-center text-[#22D3EE] shrink-0">
+                                        <Send className="w-5 h-5 text-[#22D3EE]" />
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-bold text-white font-display uppercase tracking-wider">
+                                          Public Telegram Community
+                                        </p>
+                                        <p className="text-[11px] text-gray-400">
+                                          Read uncensored player reviews, match proofs &amp; ask questions directly.
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <a
+                                      href={faq.highlightLink.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 bg-[#FF5722] hover:bg-[#F4511E] text-white text-xs font-bold font-display uppercase tracking-wider px-4 py-2.5 rounded-xl shadow-lg shadow-[#FF5722]/20 hover:shadow-[#FF5722]/40 transition-all shrink-0 cursor-pointer"
+                                    >
+                                      <span>{faq.highlightLink.text}</span>
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Telegram Community Callout banner below FAQs */}
+              <div className="mt-8 p-6 rounded-2xl bg-[#111521] border border-white/10 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                <div>
+                  <h4 className="font-display font-extrabold text-sm text-white uppercase tracking-wider">
+                    Still have questions or need match assistance?
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Join our open Telegram group. Admins never delete criticism.
+                  </p>
+                </div>
+                <a
+                  href="https://t.me/+S6YfDMfbW3EzYjQ1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#151A29] hover:bg-[#151A29]/80 border border-[#22D3EE]/30 hover:border-[#22D3EE] text-[#22D3EE] font-mono text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-xl transition-all shrink-0 cursor-pointer"
+                >
+                  <Send className="w-4 h-4 text-[#22D3EE]" />
+                  <span>Ask in Telegram</span>
+                </a>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 6: Social Media Section */}
           <section id="social" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
 
@@ -1167,6 +1319,7 @@ export default function App() {
                     <li><a href="#features" onClick={(e) => scrollToSection(e, "features")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Core Features</a></li>
                     <li><a href="#download" onClick={(e) => scrollToSection(e, "download")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Download Installer</a></li>
                     <li><a href="#about" onClick={(e) => scrollToSection(e, "about")} className="hover:text-[#FF5722] transition-colors cursor-pointer">About esports platform</a></li>
+                    <li><a href="#faq" onClick={(e) => scrollToSection(e, "faq")} className="hover:text-[#FF5722] transition-colors cursor-pointer">Common FAQ</a></li>
                   </ul>
                 </div>
 

@@ -146,6 +146,60 @@ export const SocialMediaList = [
   },
 ];
 
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  highlightLink?: {
+    text: string;
+    url: string;
+  };
+  badge?: string;
+}
+
+export const FaqList: FaqItem[] = [
+  {
+    id: "what-is-fire-clash-bd",
+    question: "What is Fire Clash BD?",
+    answer: "Fire Clash BD is a Free Fire tournament platform for players in Bangladesh. It offers formats such as Solo Tour, Lone Wolf, Loss To Win and squad esports matches.",
+    badge: "Platform Overview"
+  },
+  {
+    id: "is-fire-clash-bd-legit",
+    question: "Is Fire Clash BD legit, or is it a scam?",
+    answer: "Fire Clash BD has been operating for over 3 months, with 1,000+ registered users and 60+ active players. So far, we haven't received any scam reports.\n\nWe believe trust comes from transparency, not just promises. That's why we have an open Telegram community where players can share feedback, raise concerns, and report issues publicly. Messages and reports are not deleted by admins to hide criticism.\n\nYou're welcome to visit our Telegram group, read the community feedback, and ask questions before joining a tournament. We encourage every player to review the tournament rules, entry fees, and prize details before participating.\n\nYour trust matters to us.",
+    highlightLink: {
+      text: "Open Public Telegram Group",
+      url: "https://t.me/+S6YfDMfbW3EzYjQ1"
+    },
+    badge: "Trust & Transparency"
+  },
+  {
+    id: "why-choose-fire-clash-bd",
+    question: "Why choose Fire Clash BD over other platforms?",
+    answer: "We focus on giving players the best value per match with low entry fees and competitive rewards. For Lone Wolf-type matches, we charge only a 10% platform fee, compared to 35% or more on some competing platforms.\n\nWith multiple tournament modes and transparent rules, Fire Clash BD helps you get more value from every match.",
+    badge: "Lowest 10% Fee"
+  },
+  {
+    id: "cost-to-join",
+    question: "How much does it cost to join a tournament?",
+    answer: "Entry fees depend on the tournament mode and event. Check the current tournament listing in the Fire Clash BD app for the exact entry fee and reward rules.",
+    badge: "Entry Fees"
+  },
+  {
+    id: "how-much-can-i-earn",
+    question: "How much can I earn from a Free Fire tournament?",
+    answer: "Rewards depend on the event's rules and your performance. Review the published prize structure, eligibility requirements and payout conditions before entering. Rewards are not guaranteed unless the tournament rules explicitly say so.",
+    badge: "Prizes & Rewards"
+  },
+  {
+    id: "check-trustworthy",
+    question: "How can I check whether a tournament is trustworthy?",
+    answer: "Read the match rules, entry fee, prize distribution and dispute policy. Check published results and contact the platform's support team if anything is unclear.",
+    badge: "Fair Play Guide"
+  }
+];
+
 export interface AppSpecs {
   tagline: string;
   apkVersion: string;
@@ -163,8 +217,9 @@ export const AppMetaData: AppSpecs = {
   apkVersion: "v2.1.0",
   fileSize: "~28MB",
   androidOs: "8.0+",
-  activeGamers: "46+",
-  totalPricePaid: "৳5K+",
-  tournamentsDone: "120+",
+  activeGamers: "60+",
+  totalPricePaid: "৳6K+",
+  tournamentsDone: "35+",
   downloadUrl: "https://github.com/fireclashbd/fireclashbd.github.io/releases/latest/download/fire_clash_bd.apk"
 };
+
