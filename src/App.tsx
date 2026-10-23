@@ -145,17 +145,19 @@ export default function App() {
 
     setMobileMenuOpen(false);
 
-    if (id === "hero") {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-      window.history.pushState(null, "", "#hero");
-      setActiveSection("hero");
-      return;
-    }
+    // Target mapping: scroll directly to the heading text for each section, or download button
+    const targetIdMap: Record<string, string> = {
+      hero: "hero-title",
+      features: "features-title",
+      download: "download",
+      about: "about-title",
+      faq: "faq-title",
+      social: "social-title",
+      policy: "policy-title"
+    };
 
-    let element = document.getElementById(id);
+    const targetId = targetIdMap[id] || id;
+    let element = document.getElementById(targetId) || document.getElementById(id);
     if (!element && id === "download") {
       element = document.getElementById("download-direct-btn") || document.getElementById("download-section");
     }
@@ -165,17 +167,12 @@ export default function App() {
       const headerHeight = header ? header.getBoundingClientRect().height : 68;
       const elementTop = element.getBoundingClientRect().top + window.scrollY;
 
-      let targetScrollTop = Math.max(0, Math.round(elementTop - headerHeight));
+      // Scroll directly to the heading text or button with a clean 16px breathing room under header
+      const targetScrollTop = Math.max(0, Math.round(elementTop - headerHeight - 16));
 
       if (id === "download") {
-        // Highlight download button so the user immediately spots it
         setDownloadButtonHighlight(true);
         setTimeout(() => setDownloadButtonHighlight(false), 2400);
-
-        // Bring download button into comfortable, prime view
-        const viewportHeight = window.innerHeight;
-        const offset = viewportHeight > 700 ? Math.round(viewportHeight * 0.32) : headerHeight + 20;
-        targetScrollTop = Math.max(0, Math.round(elementTop - offset));
       }
 
       window.scrollTo({
@@ -184,7 +181,7 @@ export default function App() {
       });
 
       window.history.pushState(null, "", `#${id}`);
-      setActiveSection("download");
+      setActiveSection(id);
     }
   };
 
@@ -209,27 +206,27 @@ export default function App() {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const scrollY = window.scrollY;
-          const scrollPosition = scrollY + 128;
+          const scrollPosition = scrollY + 110;
 
-          if (scrollY < 80) {
+          if (scrollY < 60) {
             setActiveSection((prev) => (prev !== "hero" ? "hero" : prev));
             ticking = false;
             return;
           }
 
           const sectionConfigs = [
-            { spyId: "hero", navId: "hero" },
-            { spyId: "features", navId: "features" },
-            { spyId: "download-section", navId: "download" },
-            { spyId: "about", navId: "about" },
-            { spyId: "faq", navId: "faq" },
-            { spyId: "social", navId: "social" },
-            { spyId: "policy", navId: "policy" }
+            { spyId: "hero-title", navId: "hero" },
+            { spyId: "features-title", navId: "features" },
+            { spyId: "download", navId: "download" },
+            { spyId: "about-title", navId: "about" },
+            { spyId: "faq-title", navId: "faq" },
+            { spyId: "social-title", navId: "social" },
+            { spyId: "policy-title", navId: "policy" }
           ];
 
           for (let i = sectionConfigs.length - 1; i >= 0; i--) {
             const item = sectionConfigs[i];
-            const el = document.getElementById(item.spyId);
+            const el = document.getElementById(item.spyId) || document.getElementById(item.navId);
             if (el && scrollPosition >= el.offsetTop) {
               setActiveSection((prev) => (prev !== item.navId ? item.navId : prev));
               break;
@@ -618,9 +615,9 @@ export default function App() {
 
 
           {/* Section 1: Hero Section */}
-          <section id="hero" className="relative pt-6 md:pt-14 pb-14 md:pb-20 bg-[#0B0F17] bg-grid-pattern overflow-hidden">
+          <section id="hero" className="relative pt-4 md:pt-8 pb-8 md:pb-12 bg-[#0B0F17] bg-grid-pattern overflow-hidden scroll-mt-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {/* Bangladesh Pride Badge with Tagline */}
                 <div className="inline-flex items-center space-x-2 bg-[#151A29] border border-white/10 text-[#22D3EE] text-[10px] md:text-xs font-bold uppercase py-1.5 px-4 rounded-full tracking-wider font-mono shadow-sm">
                   <span className="w-2.5 h-2.5 bg-[#22C55E] rounded-full border border-black/40 animate-pulse" />
@@ -628,7 +625,7 @@ export default function App() {
                 </div>
 
                 {/* Main Header */}
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight leading-tight uppercase max-w-3xl mx-auto text-white">
+                <h1 id="hero-title" className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight leading-tight uppercase max-w-3xl mx-auto text-white scroll-mt-24">
                   Bangladesh’s Ultimate{" "}
                   <span className="bg-gradient-to-r from-[#FF5722] via-[#FF7043] to-[#FFB300] bg-clip-text text-transparent block md:inline animate-glow">
                     Free Fire
@@ -703,18 +700,18 @@ export default function App() {
           </section>
 
           {/* Section 2: Features Section */}
-          <section id="features" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
+          <section id="features" className="pt-4 md:pt-6 pb-10 md:pb-14 bg-[#0B0F17] relative scroll-mt-20">
             {/* Visual Divider / Section Separator */}
             <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-[#0B0F17] to-transparent pointer-events-none" />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               {/* Header block for section */}
-              <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+              <div className="text-center max-w-2xl mx-auto mb-8 md:mb-10 space-y-3">
                 <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-[10px] md:text-xs font-bold uppercase py-1.5 px-4 rounded-full tracking-wider font-mono">
                   <Sparkles className="w-3.5 h-3.5 text-[#FF5722]" />
                   <span>PREMIUM GAMERS ENGINE • EVERY MATCH MATTERS</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black font-display tracking-tight uppercase text-white">
+                <h2 id="features-title" className="text-3xl md:text-4xl font-black font-display tracking-tight uppercase text-white scroll-mt-24">
                   Why Pick{" "}
                   <span className="text-[#FF5722]">
                     Fire Clash BD?
@@ -762,7 +759,7 @@ export default function App() {
           </section>
 
           {/* Section 3: Download APK Section */}
-          <section id="download-section" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative overflow-hidden">
+          <section id="download-section" className="pt-4 md:pt-6 pb-10 md:pb-14 bg-[#0B0F17] relative overflow-hidden scroll-mt-20">
             {/* Visual background decorations */}
             <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
             <div className="absolute top-[20%] left-[-15%] w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle,rgba(255,87,34,0.06)_0%,transparent_70%)] pointer-events-none" />
@@ -936,15 +933,15 @@ export default function App() {
           </section>
 
           {/* Section 4: About Section */}
-          <section id="about" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
+          <section id="about" className="pt-4 md:pt-6 pb-10 md:pb-14 bg-[#0B0F17] relative scroll-mt-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
                   <Shield className="w-3.5 h-3.5 text-[#22D3EE]" />
                   <span>Who We Are • Every Match Matters</span>
                 </div>
 
-                <h2 className="text-3xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white">
+                <h2 id="about-title" className="text-3xl sm:text-4xl font-extrabold font-display uppercase tracking-tight text-white scroll-mt-24">
                   ABOUT{" "}
                   <span className="text-[#FF5722]">
                     FIRE CLASH BD
@@ -998,15 +995,15 @@ export default function App() {
           </section>
 
           {/* Section 5: FAQ Section */}
-          <section id="faq" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
+          <section id="faq" className="pt-4 md:pt-6 pb-10 md:pb-14 bg-[#0B0F17] relative scroll-mt-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
               {/* Header layout */}
-              <div className="text-center mb-12 space-y-3">
+              <div className="text-center mb-8 space-y-3">
                 <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
                   <HelpCircle className="w-3.5 h-3.5 text-[#22D3EE]" />
                   <span>Frequently Asked Questions • Trust &amp; Transparency</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black font-display uppercase text-white tracking-tight">
+                <h2 id="faq-title" className="text-3xl md:text-4xl font-black font-display uppercase text-white tracking-tight scroll-mt-24">
                   FREQUENTLY ASKED{" "}
                   <span className="text-[#FF5722]">
                     QUESTIONS
@@ -1143,16 +1140,16 @@ export default function App() {
           </section>
 
           {/* Section 6: Social Media Section */}
-          <section id="social" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
+          <section id="social" className="pt-4 md:pt-6 pb-10 md:pb-14 bg-[#0B0F17] relative scroll-mt-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
 
               {/* Header section blocks */}
-              <div className="max-w-2xl mx-auto mb-16 space-y-4">
+              <div className="max-w-2xl mx-auto mb-8 md:mb-10 space-y-3">
                 <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-[10px] md:text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
                   <Share2 className="w-3.5 h-3.5 text-[#22D3EE]" />
                   <span>Esports communities • Every Match Matters</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black font-display uppercase tracking-tight text-white">
+                <h2 id="social-title" className="text-3xl md:text-4xl font-black font-display uppercase tracking-tight text-white scroll-mt-24">
                   JOIN OUR{" "}
                   <span className="text-[#FF5722]">
                     GAMING WORLD
@@ -1207,17 +1204,17 @@ export default function App() {
             </div>
           </section>
 
-          {/* Section 6: Privacy Policy with expandable accordion */}
-          <section id="policy" className="pt-12 md:pt-16 pb-16 md:pb-24 bg-[#0B0F17] relative">
+          {/* Section 7: Privacy Policy with expandable accordion */}
+          <section id="policy" className="pt-4 md:pt-6 pb-10 md:pb-14 bg-[#0B0F17] relative scroll-mt-20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
               {/* Header layout */}
-              <div className="text-center mb-12 space-y-3">
+              <div className="text-center mb-8 space-y-3">
                 <div className="inline-flex items-center space-x-1.5 bg-[#151A29] border border-white/10 text-[#22D3EE] text-xs font-bold uppercase py-1.5 px-3.5 rounded-full tracking-wider font-mono">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#22D3EE]" />
                   <span>Fair Play Commitment • Every Match Matters</span>
                 </div>
-                <h2 className="text-3xl font-black font-display uppercase text-white">
+                <h2 id="policy-title" className="text-3xl font-black font-display uppercase text-white scroll-mt-24">
                   POLICIES &amp;{" "}
                   <span className="text-[#FF5722]">
                     RULES FOR GAMEPLAY
